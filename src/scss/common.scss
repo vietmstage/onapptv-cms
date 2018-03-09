@@ -1,0 +1,275 @@
+@import 'variables';
+
+.clearfix {
+  &::after,
+  &::before {
+    content: "";
+    display: table;
+  }
+
+  &::after {
+    clear: both;
+  }
+}
+
+.bottom-10 {
+  margin-bottom: 10px;
+}
+
+.right {
+  float: right;
+}
+
+.left {
+  float: left;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: normal;
+}
+
+#header {
+  background: #148cbf;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  padding-right: 10px;
+
+  .ui.dropdown .menu > .item .text {
+    white-space: initial;
+  }
+
+  .ui.circular.label {
+    top: 2px;
+    left: 31px;
+    line-height: 15px;
+    min-width: 15px;
+    min-height: 15px;
+    padding: 0 !important;
+  }
+
+  .ui.dropdown.user-menu .menu > .header {
+    text-transform: none;
+    font-weight: normal;
+    font-size: 1em;
+    margin: 0;
+    padding: 0.7rem;
+    background: #ccc;
+    border-radius: 3px 3px 0 0;
+    color: #666;
+  }
+
+  .ui.pointing.dropdown.user-menu > .menu::after {
+    background: #ccc;
+  }
+
+  .ui.top.pointing.dropdown.notification > .left.menu::after,
+  .ui.top.right.pointing.dropdown.notification > .menu::after {
+    right: 1.8em !important;
+  }
+
+  .selected-app {
+    line-height: 20px;
+    padding: 10px;
+    color: #fff;
+  }
+
+  .logo {
+    width: 200px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0 10px;
+
+    img {
+      float: left;
+      margin: 10px 0;
+    }
+
+    span {
+      display: block;
+      height: 20px;
+      line-height: 20px;
+      float: left;
+      margin: 10px;
+      color: #fff;
+      font-size: 18px;
+    }
+
+  }
+
+  &::after,
+  &::before {
+    content: "";
+    display: table;
+  }
+
+  &::after {
+    clear: both;
+  }
+
+  .title {
+    font-size: 20px;
+    line-height: $header-height;
+    color: #fff;
+    margin-left: 10px;
+    display: block;
+    float: left;
+  }
+}
+
+#page-bg {
+  margin-left: 200px;
+  padding: calc(#{$header-height} + 20px) 20px 20px;
+  background: #eee;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.main-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.highcharts-credits {
+  display: none;
+}
+
+
+
+h3.segment-title {
+  margin: 0;
+  float: left;
+  line-height: 26px;
+}
+
+
+// loading wrapper
+.ui.dimmer.loading-wrapper {
+  position: fixed;
+  left: 200px !important;
+  width: calc(100% - 200px);
+  height: calc(100% - 40px);
+  top: 40px !important;
+}
+
+.chart-placeholder {
+  background: #fff;
+  color: #ccc;
+  height: 400px;
+  text-align: center;
+
+  span {
+    font-size: 36px;
+    line-height: 400px;
+  }
+}
+
+.chart-header {
+  .segment.blue {
+    padding: 5px 5px 5px 15px;
+    background: #f5f5f5;
+  }
+
+  .segment:not(.blue) {
+    padding-top: 40px;
+  }
+
+  h3 {
+    margin-top: 4px;
+  }
+
+  .chart-control {
+    float: right;
+    line-height: 35px;
+
+    > * {
+      float: left;
+      margin-left: 10px;
+    }
+
+    a {
+      margin-right: 30px;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        color: #0d3a74;
+
+        .icon {
+          color: #0d3a74 !important;
+        }
+
+        &:active {
+          color: #922a1b;
+
+          .icon {
+            color: #922a1b !important;
+          }
+        }
+      }
+    }
+
+    .icon.circular {
+      margin-top: 4px;
+    }
+
+    .DateRangePickerInput {
+      border: none;
+      background: none;
+
+      input {
+        background: none !important;
+      }
+    }
+
+    .DateInput {
+      background: none;
+    }
+  }
+}
+
+
+span.ms-text {
+  display: block;
+  float: left;
+  margin-left: 10px;
+  line-height: 17px;
+}
+
+.ms-option {
+  .checkbox {
+    float: left;
+  }
+}
+
+th.is-sorting {
+  background: darken(#f9fafb, 5) !important;
+}
+
+.is-sorting {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+.is-sorting,
+.no-sort {
+  div {
+    cursor: default;
+    user-select: none;
+  }
+}
+
+.selected-row {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.no-sort:hover {
+  background: darken(#f9fafb, 3) !important;
+}
+
+
+.flex-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

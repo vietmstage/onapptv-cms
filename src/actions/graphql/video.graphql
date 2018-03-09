@@ -1,0 +1,17 @@
+type VideoInput {
+  title: String,
+  tags: [String],
+  contentId: String,
+  duration_in_seconds: Float,
+  shortDescription: String,
+  longDescription: String,
+  thumbnail: ThumbnailObject
+}
+
+type ThumbnailObject {
+  height: Float
+  width: Float
+  url: String
+  name: String
+  _id: ID
+}

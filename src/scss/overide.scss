@@ -1,0 +1,243 @@
+.separator {
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+td {
+  word-break: break-all;
+}
+
+// Date Picker
+
+.DateRangePicker_picker,
+.SingleDatePicker_picker {
+  top: 50px !important;
+}
+
+.DateInput_input {
+  font-size: 1em;
+  padding: 0.64857143em 1em;
+  line-height: 1.21428571em;
+  border-radius: 0.48571429rem;
+  cursor: pointer;
+  border: 0 !important;
+}
+
+.DateInput {
+  font-size: 1em;
+  width: 95px;
+  border-radius: 0.48571429rem;
+}
+
+.DateRangePickerInput {
+  border-radius: 0.28571429rem;
+  cursor: pointer;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+}
+
+.DateInput_input__focused {
+  border: none;
+  font-weight: bold;
+}
+
+.DateInput__openDown::before {
+  top: 38px !important;
+}
+
+.DateInput__openDown::after,
+.DateInput_fang {
+  top: 39px !important;
+}
+
+.DateRangePicker_picker__openDown {
+  top: 50px !important;
+}
+
+.DateRangePicker {
+  // top: -1px;
+}
+
+.DateRangePickerInput_arrow_svg {
+  width: 15px;
+  height: 15px;
+}
+
+.CalendarMonth_caption {
+  padding-bottom: 45px !important;
+}
+
+.SingleDatePicker_picker__openDown {
+  top: 50px !important;
+}
+
+.ui.dimmer {
+  z-index: 1901;
+}
+
+.ui {
+  &.modal {
+    &.modal-600px {
+      @media screen and (min-width: 768px) {
+        width: 600px;
+        margin-left: -300px;
+      }
+    }
+  }
+}
+
+.dropdown-with-hint.ui.selection.dropdown .menu > .item {
+  padding: 0 !important;
+
+  .dropdown-item {
+    padding: $meu-item-padding;
+  }
+}
+
+.dropdown-with-icon.ui.selection.dropdown .menu > .item {
+  padding: 0 !important;
+
+  .dropdown-item {
+    padding: 0.48571429rem 0.8rem !important;
+  }
+}
+
+.property-selector {
+  padding: 5px 0;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+
+  .fields {
+    margin-bottom: 0 !important;
+  }
+}
+
+i.icon.property-icon {
+  padding: 0 !important;
+  margin-right: 10px;
+}
+
+.property-hints {
+  float: left;
+  margin-top: 10px;
+
+  div {
+    float: left;
+    margin-right: 20px;
+  }
+}
+
+.ui.form .field > label {
+  margin-bottom: 6px;
+}
+
+.ui.segment {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.ui.table {
+  tr {
+    &:hover {
+      background: #eceff1;
+    }
+  }
+
+  .ui.button {
+    padding: 4px;
+    background: none;
+
+    &:hover {
+      &:active {
+        color: #000;
+        background: #eee;
+      }
+    }
+
+    i {
+      font-size: 16px;
+    }
+
+    &.mini {
+      i {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+.mce-branding {
+  display: none !important;
+}
+
+.secondary-tab a.item {
+  background: #eee !important;
+
+  &:hover {
+    background: #ddd !important;
+  }
+
+  &.active {
+    background: #148cbf !important;
+    color: #fff !important;
+    font-weight: bold !important;
+  }
+}
+
+.ui.loading.selection.dropdown > i.icon {
+  padding: 1.15em 1em !important;
+}
+
+.ui.dropdown {
+  vertical-align: top;
+}
+
+.ui.table {
+  table-layout: fixed;
+}
+
+.popup {
+  z-index: 10000 !important;
+}
+
+.ui.progress .bar {
+  min-width: 0 !important;
+}
+
+.big-dropdown {
+  &.ui.search.selection.dropdown {
+    line-height: 1.5em;
+    padding: 6px 21px 6px 8px;
+    font-size: 1.3em;
+
+    > input.search {
+      line-height: 1.5em;
+      padding: 5px 21px 5px 8px;
+      font-size: 1em;
+    }
+  }
+}
+
+.ui.toggle.checkbox .box::before,
+.ui.toggle.checkbox label::before {
+  width: 3.85rem;
+  height: 1.85rem;
+  top: -0.15rem;
+}
+
+.ui.toggle.checkbox .box::before,
+.ui.toggle.checkbox label::before {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.ui.toggle.checkbox input ~ .box::after,
+.ui.toggle.checkbox input ~ label::after {
+  left: 0.15rem;
+}
+
+.segment-header {
+  h2 {
+    margin: 0;
+  }
+}
+

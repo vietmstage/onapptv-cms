@@ -1,0 +1,57 @@
+.video-detail {
+  display: flex;
+  .video__image-wrapper {
+    width: 200px;
+    margin-right: 20px;
+
+    .photo-wrap {
+      width: 200px;
+      height: 200px;
+      background-size: cover;
+      background-position: center center;
+      border: 1px solid #eee;
+      position: relative;
+    }
+
+    .avatar-edit {
+      width: 110px;
+      margin: 0;
+    }
+
+    .input-file {
+      display: none;
+    }
+
+  }
+
+  .video__info {
+    flex: 1;
+  }
+}
+
+.dropzone-wrapper {
+  width: 120px;
+  height: 120px;
+  .dropzone {
+    width: inherit;
+    height: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(0,0,0,0.3);
+    border-radius: 5px;
+    &:hover {
+      cursor: pointer;
+    }
+    button {
+      -webkit-appearance: none;
+      pointer-events: none;
+      color: rgba(0,0,0,0.3);
+      font-size: 24px;
+      border: 0;
+    }
+    input {
+      display: none;
+    }
+  }
+}
