@@ -7,6 +7,7 @@ export const getVideos = (page = 1, perPage = 20) => {
         data: videoPagination (page: ${page}, perPage: ${perPage}) {
           count
           items {
+            _id
             contentId
             duration_in_seconds
             publishDate
@@ -20,11 +21,6 @@ export const getVideos = (page = 1, perPage = 20) => {
               fileName
               name
               url
-              scaledImage {
-                height
-                width
-                url
-              }
             }
             type
             updatedAt
@@ -50,6 +46,8 @@ export const getVideoDetail = (contentId) => {
           seriesId
           seasonIndex
           episodeIndex
+          tags
+          genreIds
           originalImage {
             fileName
             name
@@ -70,42 +68,6 @@ export const getVideoDetail = (contentId) => {
 }
 
 export const createVideo = (data) => {
-  // const videoData = {
-  //   title: data.title,
-  //   contentId: data.contentId,
-  //   duration_in_seconds: data.duration_in_seconds
-  // }
-  // return graphqlClient.mutate({
-  //   variables: {...data},
-  //   mutation: gql`
-  //     mutation (
-  //       $title: String,
-  //       $tags: [String],
-  //       $contentId: String,
-  //       $duration_in_seconds: Float,
-  //       $shortDescription: String,
-  //       $longDescription: String,
-  //       $thumbnails: [input {
-  //         url: String
-  //       }]
-  //     ) {
-  //       admin {
-  //         videoCreate(record: {
-  //           title: $title
-  //           tags: $tags,
-  //           contentId: $contentId,
-  //           duration_in_seconds: $duration_in_seconds,
-  //           shortDescription: $shortDescription,
-  //           longDescription: $longDescription,
-  //           thumbnails: $thumbnails
-  //         }) {
-  //           recordId
-  //         }
-  //       }
-  //     }
-  //   `
-  // }).then(data => data).catch(err => console.error(err))
-
   return client.query(`
     mutation ($data: CreateOnevideotypeInput!) {
       admin {
@@ -115,4 +77,38 @@ export const createVideo = (data) => {
       }
     }
   `, {data}).then(data => data).catch(err => console.error(err))
+}
+
+export const videoSearch = (text, limit = 10, skip = 0) => {
+  return client.query(`
+    query {
+      viewer {
+        videoSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
+          count
+          items: hits {
+            _id
+            data: fromMongo {
+              _id
+              title
+              shortDescription
+              duration_in_second
+              originalImage {
+                url
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `).then(result => {
+    const data = result.data.viewer.videoSearch
+    if(!data.items.length) return data
+    const {count, items} = data
+    let newData = {count, items: []}
+    items.forEach(item => {
+      item.data && newData.items.push(item.data)
+    })
+    return newData
+  }).catch(err => console.error(err))
 }

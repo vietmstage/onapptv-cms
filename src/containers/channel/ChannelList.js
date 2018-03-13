@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
 import { Table, Segment, Input, Button, Popup } from 'semantic-ui-react'
-import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
-import { getChannel } from '../../actions/channel';
+import { getChannel, channelSearch } from '../../actions/channel';
 import Pagination from '../../components/common/Pagination'
 import {connect} from 'react-redux'
+import { toast } from 'react-toastify';
 @connect(state => {
   return {
     router: state.routing
@@ -20,12 +20,13 @@ export default class ChannelList extends Component {
     activePage: 1,
     pageSize: 20,
     items: [],
-    total: 0
+    total: 0,
+    confirmedSearchString: ''
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10)}, this._handleGetChannel)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetChannel)
     } else {
       this._handleGetChannel()
     }
@@ -33,15 +34,29 @@ export default class ChannelList extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10)}, this._handleGetChannel)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetChannel)
     }
   }
   
 
   _handleGetChannel = () => {
-    const {activePage, pageSize} = this.state
+    const {activePage, pageSize, confirmedSearchString} = this.state
+    if(confirmedSearchString.length !== 0) {
+      channelSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        if(!data) {
+          toast.error('Cannot search channel!')
+          return
+        }
+        const {items, count} = data
+        this.setState({
+          items,
+          total: count
+        })
+      })
+      return
+    }
     getChannel(activePage, pageSize).then(result => {
-      if(!result) return
+      if(!result || result.errors) return
       const {items, count} = result.data.viewer.data
       this.setState({
         items,
@@ -59,7 +74,7 @@ export default class ChannelList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false, selected: []})
+        this.setState({confirmedSearchString: searchString, isSearching: false}, this._handleGetChannel)
       }, 500)
     }
   }
@@ -84,7 +99,7 @@ export default class ChannelList extends Component {
           <h2>Channel List</h2>
           <div className="flex-box">
             <div>
-              <DropDown
+              {/* <DropDown
                 value={searchField}
                 style={{width: 120, marginRight: 5}}
                 compact
@@ -95,7 +110,7 @@ export default class ChannelList extends Component {
                   {key: 1, value: 'desciption', text: 'Desciption'},
                   {key: 2, value: 'type', text: 'Type'},
                 ]}
-              />
+              /> */}
               <Input
                 icon='search'
                 loading={isSearching}
@@ -119,7 +134,7 @@ export default class ChannelList extends Component {
         <Table>
           <Table.Header>
             <Table.Row> 
-              {/* <Table.HeaderCell></Table.HeaderCell> */}
+              <Table.HeaderCell style={{width: 90}}/>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Type</Table.HeaderCell>
@@ -131,11 +146,15 @@ export default class ChannelList extends Component {
             {items.map((item, index) => {
               return (
                 <Table.Row key={index}>
-                  {/* <Table.Cell>
+                  <Table.Cell>
                     <div>
-                      {item.thumbnails && <img src={item.thumbnails[0].url || ''} alt={item.thumbnails[0].name || ''} style={{width: 54, height: 36}} />}
+                      {!!item.originalImage.length && <img
+                        src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
+                        alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
+                        style={{width: 70, verticalAlign: 'top', objectFit: 'cover'}}
+                      />}
                     </div>
-                  </Table.Cell> */}
+                  </Table.Cell>
                   <Table.Cell>{item.title}</Table.Cell>
                   <Table.Cell>{item.shortDescription}</Table.Cell>
                   <Table.Cell>{item.type}</Table.Cell>
@@ -143,7 +162,7 @@ export default class ChannelList extends Component {
                   <Table.Cell>
                     <div>
                       <Popup
-                        trigger={<Button icon='edit' size='mini' as={Link} to={`/channel/edit/}`} />}
+                        trigger={<Button icon='edit' size='mini' as={Link} to={`/channel/edit/${item._id}`} />}
                         content='Edit this channel.'
                         inverted
                       />

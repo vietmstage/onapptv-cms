@@ -59,3 +59,45 @@ export const createGenre = (name) => {
     }
   `, variables).then(data => data).catch(err => console.error(err))
 }
+
+
+export const getPeople = (role) => {
+  return client.query(`
+    query {
+      viewer {
+        peoplePagination(
+          page: 1,
+          filter: {
+            _operators: {
+              role: {
+                in: "${role}"
+              }
+            }
+          }) {
+          count
+          items {
+            text: name
+            value: _id
+          }
+        }
+      }
+    }
+  `).then(result => result.data.viewer.peoplePagination).catch(err => console.error(err))
+}
+
+export const createPeople = record => {
+  return client.query(`
+    mutation ($record: CreateOnePeopleModelInput!) {
+      admin {
+        peopleCreate (record: $record) {
+          recordId
+          record {
+            name
+            role
+            _id
+          }
+        }
+      }
+    }
+  `, {record}).then(result => result.data.admin.peopleCreate).catch(err => console.error(err))
+}

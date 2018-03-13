@@ -5,8 +5,9 @@ import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
 import Pagination from '../../components/common/Pagination'
-import { getSeries } from '../../actions/series';
-
+import { getSeries, seriesSearch } from '../../actions/series';
+import {toast} from 'react-toastify'
+import isEmpty from 'lodash/isEmpty'
 export default class SeriesList extends Component {
   state = {
     searchField: 'title',
@@ -15,12 +16,13 @@ export default class SeriesList extends Component {
     activePage: 1,
     pageSize: 20,
     items: [],
-    total: 0
+    total: 0,
+    confirmedSearchString: ''
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10)}, this._handleGetSeries)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetSeries)
     } else {
       this._handleGetSeries()
     }
@@ -28,14 +30,33 @@ export default class SeriesList extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10)}, this._handleGetSeries)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetSeries)
     }
   }
 
   _handleGetSeries = () => {
-    const {activePage, pageSize} = this.state
+    const {activePage, pageSize, confirmedSearchString} = this.state
+    if (confirmedSearchString.length !== 0) {
+      seriesSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        if(!data) {
+          toast.error('Cannot search series!')
+          return
+        }
+        const {items, count} = data
+        this.setState({
+          items,
+          total: count
+        })
+      })
+      return
+    }
     getSeries(activePage, pageSize).then(result => {
+      console.log('series', result)
       if(!result) return
+      if(result.errors && result.errors.length) {
+        toast.error('Cannot get series list!')
+        return
+      }
       const {items, count} = result.data.viewer.data
       this.setState({
         items,
@@ -53,7 +74,7 @@ export default class SeriesList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false, selected: []})
+        this.setState({confirmedSearchString: searchString, isSearching: false}, this._handleGetSeries)
       }, 500)
     }
   }
@@ -78,7 +99,7 @@ export default class SeriesList extends Component {
           <h2>Series List</h2>
           <div className="flex-box">
             <div>
-              <DropDown
+              {/* <DropDown
                 value={searchField}
                 style={{width: 120, marginRight: 5}}
                 compact
@@ -89,7 +110,7 @@ export default class SeriesList extends Component {
                   {key: 1, value: 'desciption', text: 'Desciption'},
                   {key: 2, value: 'type', text: 'Type'},
                 ]}
-              />
+              /> */}
               <Input
                 icon='search'
                 loading={isSearching}
@@ -112,7 +133,8 @@ export default class SeriesList extends Component {
         </Segment>
         <Table>
           <Table.Header>
-            <Table.Row> 
+            <Table.Row>
+              <Table.HeaderCell style={{width: 90}}/>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Type</Table.HeaderCell>
@@ -124,6 +146,15 @@ export default class SeriesList extends Component {
             {items.map((item, index) => {
               return (
                 <Table.Row key={index}>
+                  <Table.Cell>
+                    <div>
+                      {!!item.originalImage.length && <img
+                        src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
+                        alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
+                        style={{width: 70, verticalAlign: 'top', objectFit: 'cover'}}
+                      />}
+                    </div>
+                  </Table.Cell>
                   <Table.Cell>{item.title}</Table.Cell>
                   <Table.Cell>{item.shortDescription}</Table.Cell>
                   <Table.Cell>{item.type}</Table.Cell>
@@ -131,7 +162,7 @@ export default class SeriesList extends Component {
                   <Table.Cell>
                     <div>
                       <Popup
-                        trigger={<Button icon='edit' size='mini' as={Link} to={`/series/edit/}`} />}
+                        trigger={<Button icon='edit' size='mini' as={Link} to={`/series/edit/${item._id}`} />}
                         content='Edit this series.'
                         inverted
                       />

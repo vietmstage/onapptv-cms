@@ -13,8 +13,8 @@ class Pagination extends Component {
 
   render () {
     const {currentPage, total, url, pageSize, onchangeSize} = this.props
-    if (total < pageSize) return null
-    const totalPages = Math.ceil(total / pageSize) + 1
+    if (total <= pageSize) return null
+    const totalPages = Math.ceil(total / pageSize)
     const endPage = Math.min(totalPages, currentPage + Math.max(3, 7 - currentPage))
     const startPage = Math.max(1, currentPage - Math.max(3, 6 - totalPages + currentPage))
     return (

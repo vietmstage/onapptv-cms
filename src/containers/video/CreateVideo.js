@@ -1,130 +1,26 @@
 import React, { Component } from 'react'
-import {Segment, Form, Button, Divider, Dimmer, Loader, Icon} from 'semantic-ui-react'
+import {Segment, Form, Button, Divider} from 'semantic-ui-react'
 import DropDown from '../../components/common/Dropdown'
 import { getVideoDetail, createVideo } from '../../actions/video'
 import DateTime from 'react-datetime'
-import {getImageSign, uploadImage} from '../../actions/image'
 import isEmpty from 'lodash/isEmpty'
 import { toast } from 'react-toastify';
 import moment from 'moment'
-import {getGenres, createGenre} from '../../actions/common'
-import {Promise} from 'bluebird'
-
+import ThumbnailsList from '../../components/ThumbnailsList'
+import Genres from '../../components/selector/Genres'
+import Tags from '../../components/selector/Tags'
+import AllowedCountries from '../../components/selector/AllowedCountries'
+import Description from '../../components/Description'
+import People from '../../components/selector/People'
 export default class CreateVideo extends Component {
   state = {
     contentId: '',
     videoSource: '',
-    genresOptions: [],
-    tagsOptions: [],
-    directorOptions: [],
-    castOptions: [],
-    producerOptions: [],
     seriesOptions: [],
     seriesValue: '',
     duration_in_seconds: 0,
     videoData: {},
-    allowedCountriesOptions: [],
-    thumbnails: [],
-    totalThumb: 0
-  }
-
-  componentDidMount () {
-    getGenres().then(result => {
-      if(!result) return
-      const {genresOptions} = result.data.viewer
-      this.setState({genresOptions: [...genresOptions]})
-    })
-  }
-
-  _handleFileChange = (event) => {
-    const {files} = event.target
-    const _this = this
-    if (files.length > 10) {
-      toast.error('Maximum selected images are 10')
-      return
-    }
-    this.setState({
-      totalThumb: this.state.thumbnails.length + files.length
-    })
-
-    let p = Promise.resolve(true);
-
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      const imageName = file.name
-      const type = file.type.split('/')[1]
-      reader.onload = () => {
-        p = p.then(() => getImageSign(imageName, type).then(result => {
-          if (!result) return
-          const {url} = result.data.admin.imageSignedUrl
-          return Promise.resolve(uploadImage(url, file).then(resp => {
-            if(resp.ok) {
-              const tmp = url.split('?')[0].split('/')
-              const urlFileName = tmp[tmp.length - 1]
-              let img = new Image();
-              img.onload = function () {
-                _this.setState({
-                  videoData: {
-                    ..._this.state.videoData,
-                    originalImage: [
-                      ...(_this.state.videoData.originalImage || {}),
-                      {
-                        fileName: urlFileName,
-                        width: this.width,
-                        height: this.height
-                      }
-                    ]
-                  }
-                })
-              };
-              img.src = window.URL.createObjectURL(file);
-              this.setState({
-                thumbnails: [
-                  ...this.state.thumbnails,
-                  {
-                    url: reader.result,
-                  }
-                ]
-              })
-            } else {
-              this.setState({
-                totalThumb: this.state.totalThumb - 1
-              })
-            }
-          }))
-        }))
-      };
-      reader.onabort = () => console.log('file reading was aborted');
-      reader.onerror = () => console.log('file reading has failed');
-
-      reader.readAsDataURL(file);
-    })
-
-    // Promise.map(files, file => file).delay(500).each(file => {
-    //   const reader = new FileReader();
-    //   const imageName = file.name
-    //   const type = file.type.split('/')[1]
-    //   reader.onload = () => {
-    //     getImageSign(imageName, type).then(result => {
-    //       if (!result) return
-    //       const {url} = result.data.admin.imageSignedUrl
-    //       uploadImage(url, file).then(resp => {
-    //         const tmp = url.split('?')[0].split('/')
-    //         const urlImage = tmp[tmp.length - 1]
-    //         this.setState({
-    //           thumbnails: [
-    //             ...this.state.thumbnails,
-    //             {
-    //               url: reader.result,
-    //               name: 'xxxx'
-    //             }
-    //           ]
-    //         })
-    //       })
-    //     })
-    //   };
-    //   reader.readAsDataURL(file)
-    // })
+    key: ''
   }
 
   _handleAddNewItem = (targetOptions, value) => {
@@ -149,7 +45,8 @@ export default class CreateVideo extends Component {
       delete videoData['__typename']
 
       this.setState({
-        videoData
+        videoData,
+        key: new Date().getTime().toString()
       })
     })
   }
@@ -157,12 +54,11 @@ export default class CreateVideo extends Component {
   _handleVideoCreate = () => {
     const {videoData} = this.state
     createVideo(videoData).then(data => {
-      if(data) {
+      if(!(data.errors && data.errors.length)) {
         toast.success('Create video successfully!')
         this.setState({
           contentId: '',
           videoData: {},
-          thumbnails: []
         })
       } else {
         toast.error('Failed to create the video!')
@@ -178,77 +74,63 @@ export default class CreateVideo extends Component {
     })
   }
 
-  _handleImageNameChange = (e, {value}) => {
-    let {videoData} = this.state
-    videoData.originalImage = {
-      ...videoData.originalImage,
-      name: value
-    }
-
+  _handleUpdateOriginalImage = (originalImage) => {
     this.setState({
-      videoData
+      videoData: {
+        ...this.state.videoData,
+        originalImage
+      }
     })
   }
 
-  _handleGenreCreate = (e, {value}) => {
-    createGenre(value).then(result => {
-      if(!result) return
-      const {genresOptions, videoData} = this.state
-      const {text, value} = result.data.admin.genreCreate.record
-      let {genreIds} = videoData
-      const index = genreIds.indexOf(text)
-      genreIds.splice(index, 1)
-      genreIds.push(value)
-      this.setState({
-        genresOptions: [
-          ...genresOptions,
-          {
-            key: value,
-            text,
-            value
-          }
-        ],
+  _handleUpdateGenres = (genreIds) => {
+    this.setState({
+      videoData: {
+        ...this.state.videoData,
         genreIds
-      })
+      }
     })
   }
 
-  _renderTempThumb = () => {
-    const {totalThumb, thumbnails} = this.state
-    const array = []
-    for (let i = 0; i < (totalThumb - thumbnails.length); i++) {
-      array.push(
-        <div key={i} className='thumbnail-item thumbnail--loading'>
-          <div className='thumbnail-img'>
-            <Dimmer active inverted><Loader /></Dimmer>
-          </div>
-        </div>
-      )
-    }
-    return array
-  }
-
-  _handleThumbnailRemove = (index) => {
-    let {thumbnails, videoData, totalThumb} = this.state
-    thumbnails.splice(index, 1)
-    videoData.originalImage.splice(index, 1)
+  _handleUpdateTags = (tags) => {
     this.setState({
-      thumbnails,
-      videoData,
-      totalThumb: totalThumb - 1
+      videoData: {
+        ...this.state.videoData,
+        tags
+      }
     })
   }
 
-  _handleThumbnailNameChange = (index, name) => {
-    let {videoData} = this.state
-    videoData.originalImage[index].name = name
+  _handleUdateCountries = allowedCountries => {
     this.setState({
-      videoData
+      videoData: {
+        ...this.state.videoData,
+        allowedCountries
+      }
+    })
+  }
+
+  _handleUpdateDescription = (data) => {
+    console.log(data)
+    this.setState({
+      videoData: {
+        ...this.state.videoData,
+        ...data
+      }
+    })
+  }
+
+  _handleUpdatePeople = (data) => {
+    this.setState({
+      videoData: {
+        ...this.state.videoData,
+        ...data
+      }
     })
   }
 
   render() {
-    const {contentId, genresOptions, tagsOptions, directorOptions, castOptions, producerOptions, seriesOptions, seriesValue, allowedCountriesOptions, videoData, thumbnails} = this.state
+    const {contentId, seriesOptions, seriesValue, videoData, key} = this.state
     const {
       title = '',
       genreIds = [],
@@ -264,10 +146,10 @@ export default class CreateVideo extends Component {
       allowedCountries = [],
       seasonIndex = 0,
       episodeIndex = 0,
-      originalImage = []
+      // originalImage = []
     } = videoData
     return (
-      <div>
+      <div key={key}>
         <h2>Video Detail</h2>
         <Divider />
         <Segment.Group>
@@ -290,31 +172,8 @@ export default class CreateVideo extends Component {
               <h4>Thumbnails Video</h4>
             </Segment>
             <Segment>
-              <div className='thumbnails-list'>
-                <div>
-                  <div className='dropzone-wrapper'>
-                    <label htmlFor='file' className='dropzone'>
-                      <button><Icon name='plus'/></button>
-                      <input id='file' accept='image/*' type='file' name='thumbnails' onChange={this._handleFileChange} className='input-file' style={{display: 'none'}} multiple/>
-                    </label>
-                  </div>
-                </div>
-                {thumbnails.map((thumb, index) => <div key={thumb.url+'_'+index} className='thumbnail-item'>
-                  <div className='thumbnail-img'>
-                    <img src={thumb.url} alt=''/>
-                    <div className='btn-close' onClick={() => this._handleThumbnailRemove(index)}><Icon name='close' /></div>
-                  </div>
-                  <div className="ui form">
-                    <Form.Input
-                      label='Thumbnail name:'
-                      placeholder='Thumbnail name'
-                      value={(originalImage && originalImage[index] && originalImage[index].name) || ''}
-                      onChange={(e, {value}) => this._handleThumbnailNameChange(index, value)}
-                    />
-                  </div>
-                </div>)}
-                {this._renderTempThumb()}
-              </div>
+              <ThumbnailsList onDataCallback={this._handleUpdateOriginalImage}/>
+
             </Segment>
           </Segment.Group>
           <Segment.Group>
@@ -323,26 +182,9 @@ export default class CreateVideo extends Component {
               <div className='video-detail'>
                 <div className="video__info">
                   <Form>
-                    <Form.Input
-                      label='Title*'
-                      placeholder='Video Title'
-                      value={title}
-                      name='title'
-                      onChange={this._handleInputChange}
-                    />
-                    <Form.Input
-                      label='Short Description'
-                      placeholder='Short description'
-                      value={shortDescription || ''}
-                      name='shortDescription'
-                      onChange={this._handleInputChange}
-                    />
-                    <Form.TextArea
-                      placeholder='Describe about video detail'
-                      label='Description'
-                      value={longDescription || ''}
-                      name='longDescription'
-                      onChange={this._handleInputChange}
+                    <Description
+                      onDataCallback={this._handleUpdateDescription}
+                      data={{title, shortDescription, longDescription}}
                     />
                     {/* <Form.Group widths='equal'>
                       <Form.Field>
@@ -362,78 +204,14 @@ export default class CreateVideo extends Component {
                         placeholder='Values'
                       />
                     </Form.Group> */}
-                    <Form.Field>
-                      <label>Genres:</label>
-                      <DropDown
-                        options={genresOptions}
-                        name='genreIds'
-                        placeholder='Choose genres'
-                        search selection fluid multiple allowAdditions
-                        value={genreIds}
-                        onAddItem={this._handleGenreCreate}
-                        onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Tags:</label>
-                      <DropDown
-                        options={tagsOptions}
-                        name='tags'
-                        placeholder='Choose tags'
-                        search selection fluid multiple allowAdditions
-                        value={tags}
-                        onAddItem={(e, {value}) =>this._handleAddNewItem('tagsOptions', value)}
-                        onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Director:</label>
-                      <DropDown
-                        name='directorIds'
-                        options={directorOptions}
-                        placeholder='Choose director'
-                        search selection fluid multiple allowAdditions
-                        value={directorIds}
-                        onAddItem={(e, {value}) =>this._handleAddNewItem('directorOptions', value)}
-                        // onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Cast:</label>
-                      <DropDown
-                        name='castIds'
-                        options={castOptions}
-                        placeholder='Choose cast'
-                        search selection fluid multiple allowAdditions
-                        value={castIds}
-                        onAddItem={(e, {value}) =>this._handleAddNewItem('castOptions', value)}
-                        // onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Producer:</label>
-                      <DropDown
-                        name='producerIds'
-                        options={producerOptions}
-                        placeholder='Choose producer'
-                        search selection fluid multiple allowAdditions
-                        value={producerIds}
-                        onAddItem={(e, {value}) =>this._handleAddNewItem('producerOptions', value)}
-                        // onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Allowed Countries</label>
-                      <DropDown
-                        name='allowedCountries'
-                        options={allowedCountriesOptions}
-                        placeholder='Choose allowed countries'
-                        search selection multiple fluid allowAdditions
-                        value={allowedCountries}
-                        onAddItem={(e, {value}) =>this._handleAddNewItem('allowedCountriesOptions', value)}
-                        onChange={this._handleInputChange}
-                      />
-                    </Form.Field>
+                    <Genres onDataCallback={this._handleUpdateGenres} genreIds={genreIds}/>
+                    
+                    <Tags onDataCallback={this._handleUpdateTags} tags={tags}/>
+
+                    <People onDataCallback={this._handleUpdatePeople} data={{directorIds, castIds, producerIds}}/>
+                    
+                    <AllowedCountries onDataCallback={this._handleUdateCountries} allowedCountries={allowedCountries}/>
+                    
                     <Form.Input
                       label='Duration in seconds'
                       placeholder='Duration in seconds'

@@ -1,39 +1,14 @@
 import React, { Component } from 'react'
-import {Segment, Form, Button, Divider, Icon} from 'semantic-ui-react'
-import DropDown from '../../components/common/Dropdown'
-import DateTime from 'react-datetime'
+import {Segment, Button, Divider, Form} from 'semantic-ui-react'
+import ThumbnailsList from '../../components/ThumbnailsList'
+import Description from '../../components/Description'
+import { channelCreate } from '../../actions/channel';
+import { toast } from 'react-toastify';
 
 export default class CreateChannel extends Component {
   state = {
     videoData: {},
-  }
-  _handleFileChange = (event) => {
-    const {videoData} = this.state
-    const {thumbnails = []} = videoData
-    const {value, files} = event.target
-    if (!value) return
-    const formContent = {fileName: value}
-    const reader = new window.FileReader()
-    formContent.file = files[0]
-    reader.readAsDataURL(files[0])
-    reader.onload = () => {
-      formContent.url = reader.result
-      videoData.thumbnails = [
-        ...thumbnails,
-        {
-          url: reader.result
-        }
-      ]
-      this.setState({
-        videoData
-      })
-    }
-  }
-
-  _handleThumbnailRemove = (index) => {
-    const {videoData} = this.state
-    videoData.thumbnails.splice(index, 1)
-    this.setState({videoData})
+    key: ''
   }
 
   _handleAddNewItem = (targetOptions, value) => {
@@ -42,12 +17,6 @@ export default class CreateChannel extends Component {
     })
   }
   _handleArrayChange = (e, { name, value }) => this.setState({ [name]: value })
-
-  _handleThumbnailNameChange = (index, value) => {
-    const {videoData} = this.state
-    videoData.thumbnails[index].name = value
-    this.setState({videoData})
-  }
 
   _handleInputChange = (e, {name, value}) => {
     let {videoData} = this.state
@@ -58,17 +27,48 @@ export default class CreateChannel extends Component {
     })
   }
 
-  render() {
+  _handleUpdateOriginalImage = (originalImage) => {
+    this.setState({
+      videoData: {
+        ...this.state.videoData,
+        originalImage
+      }
+    })
+  }
+
+  _handleUpdateDescription = (data) => {
+    this.setState({
+      videoData: {
+        ...this.state.videoData,
+        ...data
+      }
+    })
+  }
+  
+  _handleCreate = () => {
     const {videoData} = this.state
+    channelCreate(videoData).then(data => {
+      if(!(data.errors && data.errors.length)) {
+        toast.success('Create new channel successfully!')
+        this.setState({
+          videoData: {},
+          key: new Date().getTime().toString()
+        })
+      } else {
+        toast.error('Create faield!!')
+      }
+    })
+  }
+
+  render() {
+    const {videoData, key} = this.state
     const {
       title = '',
-      thumbnails = [],
       shortDescription = '',
-      longDescription = '',
-      contentId = ''
+      longDescription = ''
     } = videoData
     return (
-      <div>
+      <div key={key}>
         <h2>Channel Detail</h2>
         <Divider />
         <Segment.Group>
@@ -76,58 +76,19 @@ export default class CreateChannel extends Component {
             <h4>Thumbnails Channel</h4>
           </Segment>
           <Segment>
-            <div className='thumbnails-list'>
-              <div>
-                <div className='dropzone-wrapper'>
-                  <label htmlFor='file' className='dropzone'>
-                    <button><Icon name='plus'/></button>
-                    <input id='file' accept='image/*' type='file' name='thumbnails' onChange={this._handleFileChange} className='input-file' style={{display: 'none'}}/>
-                  </label>
-                </div>
-              </div>
-              {thumbnails.map((thumb, index) => <div key={thumb.url+'_'+index} className='thumbnail-item'>
-                <div className='thumbnail-img'>
-                  <img src={thumb.url} alt=''/>
-                  <div className='btn-close' onClick={() => this._handleThumbnailRemove(index)}><Icon name='close' /></div>
-                </div>
-                <div className="ui form">
-                  <Form.Input
-                    label='Thumbnail name:'
-                    placeholder='Thumbnail name'
-                    value={thumb.name || ''}
-                    onChange={(e, {value}) => this._handleThumbnailNameChange(index, value)}
-                  />
-                </div>
-              </div>)}
-            </div>
+            <ThumbnailsList onDataCallback={this._handleUpdateOriginalImage}/>
           </Segment>
         </Segment.Group>
         <Segment.Group>
           <Segment><h4>Channel info</h4></Segment>
           <Segment>
             <div className='video-detail'>
-            <div className="video__info">
+              <div className="video__info">
                 <Form>
-                  <Form.Input
-                    label='Title*'
-                    placeholder='Video Title'
-                    value={title}
-                    name='title'
-                    onChange={this._handleInputChange}
-                  />
-                  <Form.Input
-                    label='Short Description'
-                    placeholder='Short description'
-                    value={shortDescription}
-                    name='shortDescription'
-                    onChange={this._handleInputChange}
-                  />
-                  <Form.TextArea
-                    placeholder='Describe about video detail'
-                    label='Description'
-                    value={longDescription || ''}
-                    name='longDescription'
-                    onChange={this._handleInputChange}
+
+                  <Description
+                    onDataCallback={this._handleUpdateDescription}
+                    data={{title, shortDescription, longDescription}}
                   />
                 </Form>
               </div>
@@ -135,7 +96,7 @@ export default class CreateChannel extends Component {
           </Segment>
           <Segment>
             <div>
-              <Button primary content='Create'/>
+              <Button primary content='Create' onClick={this._handleCreate}/>
             </div>
           </Segment>
         </Segment.Group>

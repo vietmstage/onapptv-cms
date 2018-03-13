@@ -1,25 +1,26 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
 import { Table, Segment, Input, Button, Popup } from 'semantic-ui-react'
-import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
-import { getVideos } from '../../actions/video'
+import { getVideos, videoSearch } from '../../actions/video'
 import Pagination from '../../components/common/Pagination'
+import {toast} from 'react-toastify'
 export default class VideoList extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
+    confirmedSearchString: '',
     searchString: '',
     activePage: 1,
-    pageSize: 20,
+    pageSize: 1,
     items: [],
     total: 0
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10)}, this._handleGetVideos)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetVideos)
     } else {
       this._handleGetVideos()
     }
@@ -27,12 +28,26 @@ export default class VideoList extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10)}, this._handleGetVideos)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetVideos)
     }
   }
 
   _handleGetVideos = () => {
-    const {activePage, pageSize} = this.state
+    const {activePage, pageSize, confirmedSearchString} = this.state
+    if (confirmedSearchString.length !== 0) {
+      videoSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        if(!data) {
+          toast.error('Cannot search channel!')
+          return
+        }
+        const {items, count} = data
+        this.setState({
+          items,
+          total: count
+        })
+      })
+      return
+    }
     getVideos(activePage, pageSize).then(result => {
       if(!result) return
       const {items, count} = result.data.viewer.data
@@ -52,19 +67,13 @@ export default class VideoList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false, selected: []})
+        this.setState({confirmedSearchString: searchString, isSearching: false, activePage: 1}, this._handleGetVideos)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
     this.setState({pageSize: data.value}, this._handleGetVideos)
-  }
-
-  _handlePaginationChange = (e, {activePage}) => {
-    this.setState({
-      activePage
-    }, this._handleGetVideos )
   }
 
   render() {
@@ -78,7 +87,7 @@ export default class VideoList extends Component {
           <h2>Video List</h2>
           <div className="flex-box">
             <div>
-              <DropDown
+              {/* <DropDown
                 value={searchField}
                 style={{width: 120, marginRight: 5}}
                 compact
@@ -89,7 +98,7 @@ export default class VideoList extends Component {
                   {key: 1, value: 'desciption', text: 'Desciption'},
                   {key: 2, value: 'type', text: 'Type'},
                 ]}
-              />
+              /> */}
               <Input
                 icon='search'
                 loading={isSearching}
@@ -127,11 +136,11 @@ export default class VideoList extends Component {
                 <Table.Row key={index}>
                   <Table.Cell>
                     <div>
-                      <img
+                      {!!item.originalImage.length && <img
                         src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
                         alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
                         style={{width: 70, verticalAlign: 'top', objectFit: 'cover'}}
-                      />
+                      />}
                     </div>
                   </Table.Cell>
                   <Table.Cell>{item.title}</Table.Cell>
@@ -141,7 +150,7 @@ export default class VideoList extends Component {
                   <Table.Cell>
                     <div>
                       <Popup
-                        trigger={<Button icon='edit' size='mini' as={Link} to={`/video/edit/}`} />}
+                        trigger={<Button icon='edit' size='mini' as={Link} to={`/video/edit/${item._id}`} />}
                         content='Edit this video.'
                         inverted
                       />
@@ -158,11 +167,6 @@ export default class VideoList extends Component {
           </Table.Body>
         </Table>
         <div style={{textAlign: 'right'}}>
-          {/* <Pagination
-            activePage={activePage}
-            onPageChange={this._handlePaginationChange}
-            totalPages={Math.ceil(total/pageSize)}
-          /> */}
           <Pagination
             currentPage={activePage}
             pageSize={pageSize}

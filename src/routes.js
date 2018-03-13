@@ -13,9 +13,9 @@ export default class Routes extends Component {
     return (
       <div id='page-bg'>
         <Route exact path='/' component={Home} />
-        <Route path='/video/list' component={VideoList} />
+        <Route path='/video/list/:page?' component={VideoList} />
         <Route path='/video/add' component={CreateVideo} />
-        <Route path='/series/list' component={SeriesList} />
+        <Route path='/series/list/:page?' component={SeriesList} />
         <Route path='/series/add' component={CreateSeries} />
         <Route path='/channel/list/:page?' component={ChannelList} />
         <Route path='/channel/add' component={CreateChannel} />
