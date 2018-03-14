@@ -1,14 +1,19 @@
 import React, { Component } from 'react'
-import ChangeTitle from '../../libs/ChangeTitle'
-import { Table, Segment, Input, Button, Popup } from 'semantic-ui-react'
-import { Link } from 'react-router-dom'
-// import {connect} from 'react-redux'
-import { getVideos, videoSearch } from '../../actions/video'
-import Pagination from '../../components/common/Pagination'
+import PropTypes from 'prop-types'
+import {newsSearch, getNews} from '../../actions/news'
 import {toast} from 'react-toastify'
-export default class VideoList extends Component {
+import debounce from 'lodash/debounce'
+import ChangeTitle from '../../libs/ChangeTitle';
+import {Segment, Table, Input, Button, Popup} from 'semantic-ui-react'
+import Pagination from '../../components/common/Pagination'
+import { Link } from 'react-router-dom'
+
+export default class NewsList extends Component {
+  static propTypes = {
+
+  }
+
   state = {
-    searchField: 'title',
     isSearching: false,
     confirmedSearchString: '',
     searchString: '',
@@ -20,22 +25,26 @@ export default class VideoList extends Component {
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetVideos)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetNews)
     } else {
-      this._handleGetVideos()
+      this._handleGetNews()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetVideos)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetNews)
     }
   }
-
-  _handleGetVideos = () => {
+  
+  _handleGetNews = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     if (confirmedSearchString.length !== 0) {
-      videoSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      newsSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        this.setState({
+          isSearching: false
+        })
+        console.log(data)
         if(!data) {
           toast.error('Cannot search channel!')
           return
@@ -48,7 +57,7 @@ export default class VideoList extends Component {
       })
       return
     }
-    getVideos(activePage, pageSize).then(result => {
+    getNews(activePage, pageSize).then(result => {
       if(!result) return
       const {items, count} = result.data.viewer.data
       this.setState({
@@ -63,24 +72,18 @@ export default class VideoList extends Component {
   }
 
   _handleSearch = () => {
-    const {searchString, confirmedSearchString} = this.state
-    if (confirmedSearchString !== searchString) {
-      this.setState({isSearching: true})
-      setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false, activePage: 1}, this._handleGetVideos)
-      }, 500)
-    }
+    const {searchString} = this.state
+      this.setState({confirmedSearchString: searchString, activePage: 1, isSearching: true}, this._handleGetNews)
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetVideos)
+    this.setState({pageSize: data.value}, this._handleGetNews)
   }
 
   render() {
-    ChangeTitle('Video List')
+    ChangeTitle('News List')
     const {history} = this.props
     const {searchField, isSearching, searchString, activePage, items, total, pageSize} = this.state
-
     return (
       <div>
         <Segment color='blue'>
@@ -105,7 +108,6 @@ export default class VideoList extends Component {
                 style={{width: 250}}
                 value={searchString}
                 onKeyDown={this._handleEnter}
-                onBlur={this._handleSearch}
                 onChange={(e, {value}) => this.setState({searchString: value})}
                 placeholder='Enter search string...' />
             </div>
@@ -125,8 +127,7 @@ export default class VideoList extends Component {
               <Table.HeaderCell style={{width: 90}}></Table.HeaderCell>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
-              <Table.HeaderCell>Type</Table.HeaderCell>
-              <Table.HeaderCell>Etc...</Table.HeaderCell>
+              <Table.HeaderCell>Url</Table.HeaderCell>
               <Table.HeaderCell style={{width: 76}}>Action</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -136,17 +137,16 @@ export default class VideoList extends Component {
                 <Table.Row key={index}>
                   <Table.Cell>
                     <div>
-                      {item.originalImage && !!item.originalImage.length && <img
-                        src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
-                        alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
+                      {item.originalImage && <img
+                        src={item.originalImage && item.originalImage.url}
+                        alt={(item.originalImage && item.originalImage.name) || ''}
                         style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                       />}
                     </div>
                   </Table.Cell>
                   <Table.Cell>{item.title}</Table.Cell>
                   <Table.Cell>{item.shortDescription}</Table.Cell>
-                  <Table.Cell>{item.type}</Table.Cell>
-                  <Table.Cell>Etc...</Table.Cell>                  
+                  <Table.Cell>{item.url}</Table.Cell>
                   <Table.Cell>
                     <div>
                       <Popup

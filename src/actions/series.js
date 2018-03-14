@@ -29,7 +29,7 @@ export const getSeries = (page = 1, perPage = 20) => {
   }).catch(error => console.error(error))
 }
 
-export const seriesSearch = (text, limit = 10, skip = 0) => {
+export const seriesSearch = (text, limit = 30, skip = 0) => {
   return client.query(`
     query {
       viewer {

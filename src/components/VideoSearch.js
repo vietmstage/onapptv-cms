@@ -5,22 +5,23 @@ import {videoSearch} from '../actions/video'
 export default class VideoSearch extends Component {
   static propTypes = {
     onDataCallback: PropTypes.func,
-    selected: PropTypes.array
+    episodes: PropTypes.object
   }
 
   state = {
     isSearching: false,
     searchString: '',
+    total: 0,
     items: [],
     error: false,
     message: '',
-    selected: []
+    selected: {}
   }
 
   componentDidMount () {
-    const {selected} = this.props
+    const {episodes} = this.props
     this.setState({
-      selected: [...selected || []]
+      selected: {...episodes || []}
     })
   }
 
@@ -31,9 +32,12 @@ export default class VideoSearch extends Component {
   _handleSearch = () => {
     const {searchString} = this.state
     videoSearch(searchString, 30).then(data => {
-      if(data && data.length) {
+      console.log('data', data)
+      if(data && !data.error) {
+        const {count, items} = data
         this.setState({
-          items: data
+          total: count,
+          items
         })
       } else {
         this.setState({
@@ -43,12 +47,14 @@ export default class VideoSearch extends Component {
     })
   }
 
-  _handleSelect = (id) => {
-    const {selected} = this.state
+  _handleSelect = (item) => {
+    let {selected} = this.state
     const {onDataCallback} = this.props
-    const index = selected.indexOf(id)
-    if (index !== -1) selected.splice(index, 1)
-    else selected.push(id)
+    const {_id: id} = item
+    const keys = Object.keys(selected)
+    const index = keys.indexOf(id)
+    if (index !== -1) delete selected[id]
+    else selected = {...selected, [id]: item}
     this.setState({selected}, () => onDataCallback && onDataCallback(this.state.selected))
   }
 
@@ -66,14 +72,14 @@ export default class VideoSearch extends Component {
               onKeyDown={this._handleEnter}
               onChange={(e, {value}) => this.setState({searchString: value})}
               placeholder='Enter search string...' />
-            <Button primary content='Search' onClick={this._handleSearch}/>
+            {/* <Button primary content='Search' onClick={this._handleSearch}/> */}
           </div>
         </div>
         <Divider/>
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell></Table.HeaderCell>
+              <Table.HeaderCell style={{width: 42}}></Table.HeaderCell>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Duration</Table.HeaderCell>
@@ -82,14 +88,14 @@ export default class VideoSearch extends Component {
           <Table.Body>
             {items.map((item, index) =>
               <Table.Row
-                className={selected.indexOf(item._id) !== -1 ? 'selected-row' : ''}
+                className={Object.keys(selected).indexOf(item._id) !== -1 ? 'selected-row' : ''}
                 key={index}
-                onClick={() => this._handleSelect(item._id)}
+                onClick={() => this._handleSelect(item)}
               >
-                <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
+                <Table.Cell><Checkbox checked={Object.keys(selected).indexOf(item._id) !== -1} /></Table.Cell>
                 <Table.Cell>{item.title}</Table.Cell>
                 <Table.Cell>{item.shortDescription}</Table.Cell>
-                <Table.Cell>{item.duration_in_second}</Table.Cell>
+                <Table.Cell>{item.duration_in_seconds}</Table.Cell>
               </Table.Row>
             )}
           </Table.Body>

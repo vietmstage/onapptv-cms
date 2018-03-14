@@ -91,7 +91,7 @@ export const videoSearch = (text, limit = 10, skip = 0) => {
               _id
               title
               shortDescription
-              duration_in_second
+              duration_in_seconds
               originalImage {
                 url
                 name
@@ -111,4 +111,23 @@ export const videoSearch = (text, limit = 10, skip = 0) => {
     })
     return newData
   }).catch(err => console.error(err))
+}
+
+export const updateSeriesId = (seriesId, ids) => {
+  return client.query(`
+    mutation ($seriesId: MongoID, $ids: [MongoID]){
+      admin {
+        videoUpdateMany (
+          record: {
+            seriesId: $seriesId
+          },
+          filter: {
+            _ids: $ids
+          }
+        ) {
+          numAffected
+        }
+      }
+    }
+  `, {seriesId, ids}).then(result => result).catch(err => console.error(err))
 }

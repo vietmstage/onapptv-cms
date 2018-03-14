@@ -7,15 +7,17 @@ import Tags from '../../components/selector/Tags'
 import AllowedCountries from '../../components/selector/AllowedCountries'
 import Description from '../../components/Description'
 import People from '../../components/selector/People'
-import { seriesCreate, seriesUpdate } from '../../actions/series';
+import { seriesCreate } from '../../actions/series';
 import { toast } from 'react-toastify';
 import VideoSearch from '../../components/VideoSearch'
+import { updateSeriesId } from '../../actions/video';
+import ChangeTitle from '../../libs/ChangeTitle';
 export default class CreateSeries extends Component {
   state = {
     videoData: {},
     modalOpen: false,
     key: '',
-    episodes: []
+    episodes: {}
   }
 
   _handleInputChange = (e, {name, value}) => {
@@ -28,37 +30,38 @@ export default class CreateSeries extends Component {
   }
 
   _handleAddEpisode = () => {
-    const {episodeTitle, seasonIndex, episodeIndex} = this.state
-    let {episodes} = this.state
-    episodes = [
-      ...(episodes || []),
-      {
-        title: episodeTitle,
-        seasonIndex,
-        episodeIndex
-      }
-    ]
-    this.setState({
-      episodes,
-      episodeTitle: '',
-      seasonIndex: '',
-      episodeIndex: '',
-      modalOpen: false
-    })
+  //   const {episodeTitle, seasonIndex, episodeIndex} = this.state
+  //   let {episodes} = this.state
+  //   episodes = [
+  //     ...(episodes || []),
+  //     {
+  //       title: episodeTitle,
+  //       seasonIndex,
+  //       episodeIndex
+  //     }
+  //   ]
+  //   this.setState({
+  //     episodes,
+  //     episodeTitle: '',
+  //     seasonIndex: '',
+  //     episodeIndex: '',
+  //     modalOpen: false
+  //   })
+  // }
+
+  // _handleModalClose = () => {
+  //   this.setState({
+  //     episodeTitle: '',
+  //     seasonIndex: '',
+  //     episodeIndex: '',
+  //     modalOpen: false
+  //   })
   }
 
-  _handleModalClose = () => {
-    this.setState({
-      episodeTitle: '',
-      seasonIndex: '',
-      episodeIndex: '',
-      modalOpen: false
-    })
-  }
-
-  _handleRemveEpisode = (index) => {
+  _handleRemveEpisode = (id) => {
     let {episodes} = this.state
-    episodes.splice(index, 1)
+    delete episodes[id]
+    // episodes.splice(index, 1)
     this.setState({episodes})
   }
 
@@ -117,10 +120,17 @@ export default class CreateSeries extends Component {
   }
 
   _handleCreate = () => {
-    const {videoData} = this.state
+    const {videoData, episodes} = this.state
     seriesCreate(videoData).then(data => {
       if(!(data.errors && data.errors.length)) {
-        this._handleUpdate(data.data.admin.seriesCreate.recordId)
+        if(Object.keys(episodes).length) this._handleUpdate(data.data.admin.seriesCreate.recordId)
+        else {
+          toast.success('Create new series success!')
+          this.setState({
+            videoData: {},
+            key: new Date().getTime().toString(),
+          })
+        }
       } else {
         toast.error('Create failed')
       }
@@ -129,7 +139,7 @@ export default class CreateSeries extends Component {
 
   _handleUpdate = (seriesId) => {
     const {episodes} = this.state
-    seriesUpdate(seriesId, {episodes}).then(data => {
+    updateSeriesId(seriesId, Object.keys(episodes)).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Create new series success!')
         this.setState({
@@ -143,12 +153,17 @@ export default class CreateSeries extends Component {
     })
   }
 
-  _handleGetEpisodesData = (data) => {
-    console.log(data)
+  _handleGetEpisodesData = (episodes) => {
+    console.log(episodes)
+    this.setState({episodes})
+  }
 
+  _handleModalClose = () => {
+    this.setState({modalOpen: false})
   }
 
   render() {
+    ChangeTitle('Create Series')
     const {videoData, modalOpen, key, episodes} = this.state
     const {
       title = '',
@@ -228,47 +243,52 @@ export default class CreateSeries extends Component {
                 <Modal trigger={<Button size='mini' onClick={() => this.setState({modalOpen: true})}>Add episode to Series</Button>} size='small' open={modalOpen}>
                   <Modal.Header>Episode Detail</Modal.Header>
                   <Modal.Content>
-                    <VideoSearch onDataCallback={this._handleGetEpisodesData}/>
+                    <VideoSearch onDataCallback={this._handleGetEpisodesData} episodes={episodes}/>
                   </Modal.Content>
                   <Modal.Actions>
                     <Button onClick={this._handleModalClose}>
-                      <Icon name='remove' /> Cancel
+                      <Icon name='checkmark' /> Done
                     </Button>
-                    <Button primary onClick={this._handleAddEpisode}>
+                    {/* <Button primary onClick={this._handleAddEpisode}>
                       <Icon name='checkmark' /> Add
-                    </Button>
+                    </Button> */}
                   </Modal.Actions>
                 </Modal>
               </div>
             </div>
           </Segment>
           <Segment>
-            <Table>
+            {!!Object.keys(episodes).length && <Table>
               <Table.Header>
                 <Table.Row>
                   <Table.HeaderCell>Title</Table.HeaderCell>
                   <Table.HeaderCell>Season</Table.HeaderCell>
                   <Table.HeaderCell>Episode Number</Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
+                  <Table.HeaderCell style={{width: 80}}></Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {episodes.map((episode, index) => <Table.Row key={index}>
-                  <Table.Cell>{episode.title}</Table.Cell>
-                  <Table.Cell>{episode.seasonIndex}</Table.Cell>
-                  <Table.Cell>{episode.episodeIndex}</Table.Cell>
-                  <Table.Cell>
-                    <div>
-                      <Popup
-                        trigger={<Button icon='trash' size='mini' onClick={() => this._handleRemveEpisode(index)} />}
-                        content='Remove this episode'
-                        inverted
-                      />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>)}
+                {Object.keys(episodes).map((id, index) => {
+                  const episode = episodes[id]
+                  return (
+                    <Table.Row key={index}>
+                      <Table.Cell>{episode.title}</Table.Cell>
+                      <Table.Cell>{episode.shortDescription}</Table.Cell>
+                      <Table.Cell>{episode.duration_in_seconds}</Table.Cell>
+                      <Table.Cell>
+                        <div>
+                          <Popup
+                            trigger={<Button icon='trash' size='mini' onClick={() => this._handleRemveEpisode(id)} />}
+                            content='Remove this episode'
+                            inverted
+                          />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  )
+                })}
               </Table.Body>
-            </Table>
+            </Table>}
           </Segment>
         </Segment.Group>
         <div style={{textAlign: 'right'}}>

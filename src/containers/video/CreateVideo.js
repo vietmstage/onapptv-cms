@@ -12,6 +12,9 @@ import Tags from '../../components/selector/Tags'
 import AllowedCountries from '../../components/selector/AllowedCountries'
 import Description from '../../components/Description'
 import People from '../../components/selector/People'
+import ChangeTitle from '../../libs/ChangeTitle'
+import debounce from 'lodash/debounce'
+import { seriesSearch } from '../../actions/series';
 export default class CreateVideo extends Component {
   state = {
     contentId: '',
@@ -129,8 +132,23 @@ export default class CreateVideo extends Component {
     })
   }
 
+  _handleSearchChange = (e, {searchQuery}) => {
+    this._debounceSearch(searchQuery)
+  }
+
+  _debounceSearch = debounce((searchQuery) => {
+    let options = []
+    seriesSearch(searchQuery).then(data => {
+      if(data.items) {
+        data.items.forEach(item => options.push({text: item.title, value: item._id}))
+        this.setState({seriesOptions: options})
+      }
+    })
+  }, 300)
+
   render() {
-    const {contentId, seriesOptions, seriesValue, videoData, key} = this.state
+    ChangeTitle('Create Video')
+    const {contentId, seriesOptions, videoData, key} = this.state
     const {
       title = '',
       genreIds = [],
@@ -146,7 +164,7 @@ export default class CreateVideo extends Component {
       allowedCountries = [],
       seasonIndex = 0,
       episodeIndex = 0,
-      // originalImage = []
+      seriesId = ''
     } = videoData
     return (
       <div key={key}>
@@ -247,12 +265,13 @@ export default class CreateVideo extends Component {
                       <Form.Field>
                         <label>Series</label>
                         <DropDown
-                          allowAdditions selection search fluid
+                          name='seriesId'
+                          selection search fluid
                           placeholder='Video series'
                           options={seriesOptions}
-                          onAddItem={(e, {value}) =>this._handleAddNewItem('seriesOptions', value)}
-                          onChange={(e, {value}) => this.setState({seriesValue: value})}
-                          value={seriesValue}
+                          onChange={this._handleInputChange}
+                          onSearchChange={this._handleSearchChange}
+                          value={seriesId}
                         />
                       </Form.Field>
                       <Form.Input

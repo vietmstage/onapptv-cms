@@ -1,3 +1,3 @@
 export default function (title) {
-  window.document.title = title + ' | mStage admin manager'
+  window.document.title = title + ' | OnApptv manager'
 }

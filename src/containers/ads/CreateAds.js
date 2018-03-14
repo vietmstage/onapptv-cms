@@ -2,13 +2,18 @@ import React, { Component } from 'react'
 import {Segment, Button, Divider, Form} from 'semantic-ui-react'
 import ThumbnailsList from '../../components/ThumbnailsList'
 import Description from '../../components/Description'
-import { channelCreate } from '../../actions/channel';
+import { adsCreate } from '../../actions/ads';
 import { toast } from 'react-toastify';
 import ChangeTitle from '../../libs/ChangeTitle';
+import { create } from 'domain';
 
-export default class CreateChannel extends Component {
+export default class CreateAds extends Component {
+  static propTypes = {
+
+  }
+
   state = {
-    videoData: {},
+    createData: {},
     key: ''
   }
 
@@ -20,18 +25,18 @@ export default class CreateChannel extends Component {
   _handleArrayChange = (e, { name, value }) => this.setState({ [name]: value })
 
   _handleInputChange = (e, {name, value}) => {
-    let {videoData} = this.state
-    videoData[name] = value
+    let {createData} = this.state
+    createData[name] = value
     this.setState({
       [name]: value,
-      videoData
+      createData
     })
   }
 
   _handleUpdateOriginalImage = (originalImage) => {
     this.setState({
-      videoData: {
-        ...this.state.videoData,
+      createData: {
+        ...this.state.createData,
         originalImage
       }
     })
@@ -39,20 +44,26 @@ export default class CreateChannel extends Component {
 
   _handleUpdateDescription = (data) => {
     this.setState({
-      videoData: {
-        ...this.state.videoData,
+      createData: {
+        ...this.state.createData,
         ...data
       }
     })
   }
   
   _handleCreate = () => {
-    const {videoData} = this.state
-    channelCreate(videoData).then(data => {
+    let {createData} = this.state
+    createData = {
+      ...createData,
+      deal: createData.title,
+      originalImage: createData.originalImage[0]
+    }
+    delete createData.title
+    adsCreate(createData).then(data => {
       if(!(data.errors && data.errors.length)) {
-        toast.success('Create new channel successfully!')
+        toast.success('Create new Ads successfully!')
         this.setState({
-          videoData: {},
+          createData: {},
           key: new Date().getTime().toString()
         })
       } else {
@@ -62,27 +73,27 @@ export default class CreateChannel extends Component {
   }
 
   render() {
-    ChangeTitle('Create Channel')
-    const {videoData, key} = this.state
+    ChangeTitle('Create Ads')
+    const {createData, key} = this.state
     const {
-      title = '',
+      deal = '',
       shortDescription = '',
       longDescription = ''
-    } = videoData
+    } = createData
     return (
       <div key={key}>
-        <h2>Channel Detail</h2>
+        <h2>Ads Detail</h2>
         <Divider />
         <Segment.Group>
           <Segment>
-            <h4>Thumbnails Channel</h4>
+            <h4>Thumbnails Ads</h4>
           </Segment>
           <Segment>
-            <ThumbnailsList onDataCallback={this._handleUpdateOriginalImage}/>
+            <ThumbnailsList onDataCallback={this._handleUpdateOriginalImage} multiple={false}/>
           </Segment>
         </Segment.Group>
         <Segment.Group>
-          <Segment><h4>Channel info</h4></Segment>
+          <Segment><h4>Ads info</h4></Segment>
           <Segment>
             <div className='video-detail'>
               <div className="video__info">
@@ -90,7 +101,7 @@ export default class CreateChannel extends Component {
 
                   <Description
                     onDataCallback={this._handleUpdateDescription}
-                    data={{title, shortDescription, longDescription}}
+                    data={{deal, shortDescription, longDescription}}
                   />
                 </Form>
               </div>

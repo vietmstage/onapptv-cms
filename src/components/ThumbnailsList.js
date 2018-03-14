@@ -4,7 +4,12 @@ import ImageUpload from './common/ImageUpload'
 import {Form, Dimmer, Loader, Icon} from 'semantic-ui-react'
 export default class ThumbnailsList extends Component {
   static propTypes = {
-    onDataCallback: PropTypes.func
+    onDataCallback: PropTypes.func,
+    multiple: PropTypes.bool
+  }
+
+  static defaultProps = {
+    multiple: true
   }
 
   state = {
@@ -49,19 +54,34 @@ export default class ThumbnailsList extends Component {
 
   _handleAcceptFiles = (files) => {
     console.log(files)
-    this.setState({
-      totalThumb: this.state.thumbnails.length + files.length
-    })
+    const {multiple} = this.props
+    if (multiple) {
+      this.setState({
+        totalThumb: this.state.thumbnails.length + files.length
+      })
+    } else {
+      this.setState({
+        totalThumb: 1
+      })
+    }
   }
 
   _handleUploadSuccess = (data) => {
     console.log(data)
-    const {thumbnailsData} = this.state
-    this.setState({
-      thumbnailsData: [
+    let {thumbnailsData} = this.state
+    const {multiple} = this.props
+    
+    if (multiple) {
+      thumbnailsData = [
         ...thumbnailsData,
         data
       ]
+    } else {
+      thumbnailsData = [data]
+    }
+
+    this.setState({
+      thumbnailsData
     }, this._dataCallback)
   }
 
@@ -73,12 +93,17 @@ export default class ThumbnailsList extends Component {
   }
 
   _hanleLoadThumbnails = (thumbnail) => {
-    this.setState({
-      thumbnails: [
+    const {multiple} = this.props
+    let {thumbnails} = this.state
+    if (multiple) {
+      thumbnails = [
         ...this.state.thumbnails,
         thumbnail
       ]
-    })
+    } else {
+      thumbnails = [thumbnail]
+    }
+    this.setState({thumbnails})
   }
 
   _dataCallback = () => {
@@ -88,12 +113,13 @@ export default class ThumbnailsList extends Component {
   }
 
   render() {
+    const {multiple} = this.props
     const {thumbnails, thumbnailsData} = this.state
     return (
       <div className='thumbnails-list'>
         <div>
           <ImageUpload
-            multiple
+            multiple={multiple}
             onAcceptFiles={this._handleAcceptFiles}
             onUploadSuccess={this._handleUploadSuccess}
             onUploadFailed={this._handleUploadFailed}
