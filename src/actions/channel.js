@@ -28,14 +28,14 @@ export const getChannel = (page = 1) => {
 
 export const channelCreate = (data) => {
   return client.query(`
-    mutation ($data: CreateOneChannelModelInput!) {
+    mutation ($data: CreateOnechanneltypeInput!) {
       admin {
         channelCreate(record: $data) {
           recordId
         }
       }
     }
-  `, {data}).then(result => result.data.admin.channelCreate).catch(err => console.error(err))
+  `, {data}).then(result => result).catch(err => console.error(err))
 }
 
 export const channelSearch = (text, limit = 10, skip = 0) => {
@@ -70,4 +70,34 @@ export const channelSearch = (text, limit = 10, skip = 0) => {
     })
     return newData
   }).catch(err => console.error(err))
+}
+
+export const channelAddEPG = (channelId, records) => {
+  return client.query(`
+    mutation ($records: [EPGModelInput]) {
+      admin {
+        channelAddEPG (
+          _id: "${channelId}",
+          records: $records
+        ) {
+          channelId
+        }
+      }
+    }
+  `, {records}).then(data => data).catch(err => console.error(err))
+}
+
+export const channelRemoveEPG = (channelId, epgId) => {
+  return client.query(`
+    mutation {
+      admin {
+        channelRemoveEPG (
+          _id: "${channelId}",
+          epgId: "${epgId}"
+        ) {
+          channelId
+        }
+      }
+    }
+  `).then(data => data).catch(err => console.error(err))
 }

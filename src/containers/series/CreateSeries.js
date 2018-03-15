@@ -243,7 +243,7 @@ export default class CreateSeries extends Component {
                 <Modal trigger={<Button size='mini' onClick={() => this.setState({modalOpen: true})}>Add episode to Series</Button>} size='small' open={modalOpen}>
                   <Modal.Header>Episode Detail</Modal.Header>
                   <Modal.Content>
-                    <VideoSearch onDataCallback={this._handleGetEpisodesData} episodes={episodes}/>
+                    <VideoSearch onDataCallback={this._handleGetEpisodesData} videosList={episodes}/>
                   </Modal.Content>
                   <Modal.Actions>
                     <Button onClick={this._handleModalClose}>

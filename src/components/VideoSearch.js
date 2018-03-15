@@ -5,7 +5,7 @@ import {videoSearch} from '../actions/video'
 export default class VideoSearch extends Component {
   static propTypes = {
     onDataCallback: PropTypes.func,
-    episodes: PropTypes.object
+    videosList: PropTypes.object
   }
 
   state = {
@@ -19,9 +19,9 @@ export default class VideoSearch extends Component {
   }
 
   componentDidMount () {
-    const {episodes} = this.props
+    const {videosList} = this.props
     this.setState({
-      selected: {...episodes || []}
+      selected: {...videosList || []}
     })
   }
 
@@ -31,8 +31,12 @@ export default class VideoSearch extends Component {
 
   _handleSearch = () => {
     const {searchString} = this.state
+    this.setState({
+      isSearching: true
+    })
     videoSearch(searchString, 30).then(data => {
       console.log('data', data)
+      this.setState({isSearching: false})
       if(data && !data.error) {
         const {count, items} = data
         this.setState({
@@ -76,6 +80,7 @@ export default class VideoSearch extends Component {
           </div>
         </div>
         <Divider/>
+        {items.length === 0 && <div>Sorry. There's nothing to show.</div>}
         <Table>
           <Table.Header>
             <Table.Row>
