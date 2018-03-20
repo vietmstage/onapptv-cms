@@ -14,7 +14,7 @@ import Description from '../../components/Description'
 import People from '../../components/selector/People'
 import ChangeTitle from '../../libs/ChangeTitle'
 import debounce from 'lodash/debounce'
-import { seriesSearch } from '../../actions/series';
+import { seriesSearch } from '../../actions/series'
 export default class CreateVideo extends Component {
   state = {
     contentId: '',
