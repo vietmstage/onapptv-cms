@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
-import { Table, Segment, Input, Button, Popup } from 'semantic-ui-react'
+import { Table, Segment, Input, Button, Popup, Checkbox } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
 import { getChannel, channelSearch } from '../../actions/channel';
@@ -21,7 +21,8 @@ export default class ChannelList extends Component {
     pageSize: 20,
     items: [],
     total: 0,
-    confirmedSearchString: ''
+    confirmedSearchString: '',
+    selected: []
   }
 
   componentDidMount () {
@@ -50,7 +51,8 @@ export default class ChannelList extends Component {
         const {items, count} = data
         this.setState({
           items,
-          total: count
+          total: count,
+          selected: []
         })
       })
       return
@@ -60,7 +62,8 @@ export default class ChannelList extends Component {
       const {items, count} = result.data.viewer.data
       this.setState({
         items,
-        total: count
+        total: count,
+        selected: []
       })
     })
   }
@@ -88,10 +91,28 @@ export default class ChannelList extends Component {
       activePage
     }, this._handleGetChannel )
   }
+
+  _handleSelect = (id) => {
+    const {selected} = this.state
+    const index = selected.indexOf(id)
+    if (index !== -1) selected.splice(index, 1)
+    else selected.push(id)
+    this.setState({selected})
+  }
+
+  _handleSelectAll = (items) => {
+    const {selected} = this.state
+    if (selected.length >= items.length) this.setState({selected: []})
+    else {
+      const newSelected = items.map(item => item._id)
+      this.setState({selected: newSelected})
+    }
+  }
+
   render() {
     ChangeTitle('Channel List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected} = this.state
 
     return (
       <div>
@@ -122,6 +143,12 @@ export default class ChannelList extends Component {
                 placeholder='Enter search string...' />
             </div>
             <div>
+              {items.length > 0 && <Button
+                size='tiny'
+                content='Archive selected channels'
+                negative
+                disabled={selected.length === 0}
+                onClick={() => this.setState({showBulkConfirm: true})} />}
               <Button
                 size='tiny'
                 primary
@@ -134,6 +161,13 @@ export default class ChannelList extends Component {
         <Table>
           <Table.Header>
             <Table.Row> 
+              <Table.HeaderCell style={{width: 50}}>
+                <Checkbox
+                  checked={selected.length === items.length}
+                  indeterminate={selected.length < items.length && selected.length > 0}
+                  onClick={() => this._handleSelectAll(items)}
+                />
+              </Table.HeaderCell>
               <Table.HeaderCell style={{width: 90}}/>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
@@ -145,12 +179,17 @@ export default class ChannelList extends Component {
           <Table.Body>
             {items.map((item, index) => {
               return (
-                <Table.Row key={index}>
+                <Table.Row
+                  key={index}
+                  className={selected.indexOf(item._id) !== -1 ? 'selected-row' : ''}
+                  onClick={() => this._handleSelect(item._id)}
+                >
+                  <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                   <Table.Cell>
                     <div>
-                      {!!item.originalImage.length && <img
-                        src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
-                        alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
+                      {!!item.originalImages.length && <img
+                        src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
+                        alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                         style={{width: 70, verticalAlign: 'top', objectFit: 'cover'}}
                       />}
                     </div>

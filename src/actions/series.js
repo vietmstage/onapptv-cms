@@ -1,5 +1,24 @@
 import {client} from './graphql'
-
+const seriesOutput = `
+  _id
+  contentId
+  publishDate
+  title
+  longDescription
+  shortDescription
+  updatedAt
+  createdAt
+  originalImages {
+    url
+    name
+    fileName
+    scaledImage {
+      height
+      width
+      url
+    }
+  }
+`
 export const getSeries = (page = 1, perPage = 20) => {
   return client.query(`
     query {
@@ -7,19 +26,7 @@ export const getSeries = (page = 1, perPage = 20) => {
         data: seriesPagination (page: ${page}, perPage: ${perPage}) {
           count
           items {
-            _id
-            contentId
-            publishDate
-            title
-            longDescription
-            shortDescription
-            updatedAt
-            createdAt
-            originalImage {
-              fileName
-              name
-              url
-            }
+            ${seriesOutput}
           }
         }
       }
@@ -38,13 +45,7 @@ export const seriesSearch = (text, limit = 30, skip = 0) => {
           items: hits {
             _id
             data: fromMongo {
-              _id
-              title
-              shortDescription
-              originalImage {
-                url
-                name
-              }
+              ${seriesOutput}
             }
           }
         }
@@ -86,4 +87,21 @@ export const seriesUpdate = (id, data) => {
       }
     }
   `, {id, data}).then(result => result).catch(err => console.error(err))
+}
+
+export const getSeriesById = id => {
+  return client.query(`
+    query {
+      viewer {
+        seriesById (_id: "${id}") {
+          ${seriesOutput}
+        }
+      }
+    }
+  `).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.viewer.seriesById}
+    }
+    return result
+  }).catch(err => console.error(err))
 }

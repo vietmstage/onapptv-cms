@@ -32,11 +32,11 @@ export default class CreateNews extends Component {
     })
   }
 
-  _handleUpdateOriginalImage = (originalImage) => {
+  _handleUpdateoriginalImages = (originalImages) => {
     this.setState({
       createData: {
         ...this.state.createData,
-        originalImage
+        originalImages
       }
     })
   }
@@ -54,7 +54,7 @@ export default class CreateNews extends Component {
     const {createData} = this.state
     newsCreate({
       ...createData,
-      originalImage: createData.originalImage[0]
+      originalImages: createData.originalImages[0]
     }).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Create new news successfully!')
@@ -85,7 +85,7 @@ export default class CreateNews extends Component {
             <h4>Thumbnails News</h4>
           </Segment>
           <Segment>
-            <ThumbnailsList onDataCallback={this._handleUpdateOriginalImage} multiple={false}/>
+            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} multiple={false}/>
           </Segment>
         </Segment.Group>
         <Segment.Group>

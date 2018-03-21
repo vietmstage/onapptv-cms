@@ -273,3 +273,11 @@ th.is-sorting {
   align-items: center;
   justify-content: space-between;
 }
+
+.div__loading-full {
+  position: relative;
+  height: calc(100vh - 40px - 40px);
+  .ui.inverted.dimmer {
+    background-color: transparent
+  }
+}

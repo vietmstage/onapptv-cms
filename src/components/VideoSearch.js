@@ -100,7 +100,7 @@ export default class VideoSearch extends Component {
                 <Table.Cell><Checkbox checked={Object.keys(selected).indexOf(item._id) !== -1} /></Table.Cell>
                 <Table.Cell>{item.title}</Table.Cell>
                 <Table.Cell>{item.shortDescription}</Table.Cell>
-                <Table.Cell>{item.duration_in_seconds}</Table.Cell>
+                <Table.Cell>{item.durationInSeconds}</Table.Cell>
               </Table.Row>
             )}
           </Table.Body>

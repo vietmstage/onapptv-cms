@@ -16,15 +16,23 @@ export default class AllowedCountries extends Component {
   
   componentDidMount() {
     const {allowedCountries} = this.props
-    this.setState({
-      allowedCountries: [...(allowedCountries || [])]
-    })
+    if (allowedCountries.length) {
+      let allowedCountriesOptions = []
+      allowedCountries.map(item => allowedCountriesOptions.push({text: item, value: item}))
+      this.setState({
+        allowedCountries: [...(allowedCountries || [])],
+        allowedCountriesOptions
+      })
+    }
   }
 
   componentWillReceiveProps (nextProps) {
     if(JSON.stringify(this.props.allowedCountries) !== JSON.stringify(nextProps.allowedCountries) && JSON.stringify(nextProps.allowedCountries) !== JSON.stringify(this.state.allowedCountries)) {
+      let allowedCountriesOptions = []
+      nextProps.allowedCountries.map(item => allowedCountriesOptions.push({text: item, value: item}))
       this.setState({
-        allowedCountries: [...(nextProps.allowedCountries || [])]
+        allowedCountries: [...(nextProps.allowedCountries || [])],
+        allowedCountriesOptions
       })
     }
   }

@@ -1,64 +1,53 @@
 import React, { Component } from 'react'
-import {Segment, Form, Button, Divider} from 'semantic-ui-react'
-import DropDown from '../../components/common/Dropdown'
-import { getVideoByContentId, createVideo } from '../../actions/video'
-import DateTime from 'react-datetime'
-import isEmpty from 'lodash/isEmpty'
-import { toast } from 'react-toastify';
+import PropTypes from 'prop-types'
+import { getVideoById, updateVideo } from '../../actions/video';
 import moment from 'moment'
-import ThumbnailsList from '../../components/ThumbnailsList'
-import Genres from '../../components/selector/Genres'
-import Tags from '../../components/selector/Tags'
-import AllowedCountries from '../../components/selector/AllowedCountries'
+import { Form, Segment, Button, Divider, Dimmer, Loader } from 'semantic-ui-react'
 import Description from '../../components/Description'
 import People from '../../components/selector/People'
-import ChangeTitle from '../../libs/ChangeTitle'
+import Genres from '../../components/selector/Genres'
+import AllowedCountries from '../../components/selector/AllowedCountries'
+import Tags from '../../components/selector/Tags'
+import DropDown from '../../components/common/Dropdown'
+import ThumbnailsList from '../../components/ThumbnailsList'
+import DateTime from 'react-datetime'
+import { toast } from 'react-toastify';
+import { getSeriesById, seriesSearch } from '../../actions/series'
 import debounce from 'lodash/debounce'
-import { seriesSearch } from '../../actions/series'
-export default class CreateVideo extends Component {
+export default class EditVideo extends Component {
+  static propTypes = {
+
+  }
+
   state = {
-    contentId: '',
-    videoSource: '',
-    seriesOptions: [],
     videoData: {},
-    key: ''
+    seriesOptions: [],
+    loadingVideo: false,
+    searchingSeries: false
   }
-
-  _handleGetVideo = () => {
-    const {contentId} = this.state
-    getVideoByContentId(contentId).then(result => {
-      if (!result) {
-        toast.error('Can\'t get brightcove video detail')
-        return
-      }
-      if (result.data.viewer.videoOne !== null) {
-        toast.error('This video had created!')
-        return
-      }
-      const data = result.data.viewer.brightcoveSearchVideo
-      let videoData = {...data}
-      delete videoData['__typename']
-
-      this.setState({
-        videoData,
-        key: new Date().getTime().toString()
+  
+  componentWillMount () {
+    const {match: {params: {videoId}}} = this.props
+    if (videoId) {
+      this.setState({loadingVideo: true})
+      getVideoById(videoId).then(result => {
+        if (result && !result.errors) {
+          if (result.data.seriesId) {
+            getSeriesById(result.data.seriesId).then(seriesResult => {
+              if (seriesResult && !seriesResult.errors) {
+                this.setState({
+                  seriesOptions: [{text: seriesResult.data.title, value: seriesResult.data._id}]
+                })
+              }
+            })
+          }
+          this.setState({videoData: result.data, loadingVideo: false})
+        } else {
+          this.setState({loadingVideo: false})
+          toast.error('Can not get video detail.')
+        }
       })
-    })
-  }
-
-  _handleVideoCreate = () => {
-    const {videoData} = this.state
-    createVideo(videoData).then(data => {
-      if(!(data.errors && data.errors.length)) {
-        toast.success('Create video successfully!')
-        this.setState({
-          contentId: '',
-          videoData: {},
-        })
-      } else {
-        toast.error('Failed to create the video!')
-      }
-    })
+    }
   }
 
   _handleInputChange = (e, {name, value}) => {
@@ -124,13 +113,32 @@ export default class CreateVideo extends Component {
     })
   }
 
+  _handleVideoCreate = () => {
+    const {videoData} = this.state
+    updateVideo(videoData).then(data => {
+      if(!(data.errors && data.errors.length)) {
+        toast.success('Update video successfully!')
+        this.props.history.push('/video/list')
+        this.setState({
+          videoData: {},
+        })
+      } else {
+        toast.error('Failed to update the video!')
+      }
+    })
+  }
+
   _handleSearchChange = (e, {searchQuery}) => {
+    let {videoData} = this.state
+    videoData.seriesId = null
+    this.setState({searchingSeries: true, videoData})
     this._debounceSearch(searchQuery)
   }
 
   _debounceSearch = debounce((searchQuery) => {
     let options = []
     seriesSearch(searchQuery).then(data => {
+      this.setState({searchingSeries: false})
       if(data.items) {
         data.items.forEach(item => options.push({text: item.title, value: item._id}))
         this.setState({seriesOptions: options})
@@ -139,8 +147,10 @@ export default class CreateVideo extends Component {
   }, 300)
 
   render() {
-    ChangeTitle('Create Video')
-    const {contentId, seriesOptions, videoData, key} = this.state
+    const {videoData, seriesOptions, loadingVideo, searchingSeries} = this.state
+
+    if (loadingVideo) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
+
     const {
       title = '',
       genreIds = [],
@@ -156,33 +166,21 @@ export default class CreateVideo extends Component {
       allowedCountries = [],
       seasonIndex = 0,
       episodeIndex = 0,
-      seriesId = ''
+      seriesId = '',
+      originalImages = []
     } = videoData
     return (
-      <div key={key}>
-        <h2>Video Detail</h2>
+      <div>
+        <h2>Edit video</h2>
         <Divider />
-        <Segment.Group>
-          <Segment>
-            <Form>
-              <Form.Input
-                label='Brightcove ID'
-                placeholder='Fill brightcove Id here'
-                value={contentId}
-                onChange={e => this.setState({contentId: e.target.value})}
-              />
-              <Button primary size='tiny' content='Load content' onClick={this._handleGetVideo}/>
-            </Form>
-          </Segment>
-        </Segment.Group>
-        {!isEmpty(videoData) &&
+        {
         <div>
           <Segment.Group>
             <Segment>
               <h4>Thumbnails Video</h4>
             </Segment>
             <Segment>
-              <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages}/>
+              <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} data={originalImages} isEdit />
 
             </Segment>
           </Segment.Group>
@@ -235,7 +233,7 @@ export default class CreateVideo extends Component {
                         <label>Publish Date</label>
                         <DateTime
                           utc
-                          timeFormat={false}
+                          // timeFormat={false}
                           value={publishDate || new Date()}
                           name='publishDate'
                           onChange={date => this._handleInputChange(null, {name: 'publishDate', value: new Date(date)})}
@@ -268,6 +266,7 @@ export default class CreateVideo extends Component {
                           onChange={this._handleInputChange}
                           onSearchChange={this._handleSearchChange}
                           value={seriesId}
+                          loading={searchingSeries}
                         />
                       </Form.Field>
                       <Form.Input
@@ -287,7 +286,7 @@ export default class CreateVideo extends Component {
                     </div>}
                     <Divider />
                     <div>
-                      <Button primary content='Create' onClick={this._handleVideoCreate}/>
+                      <Button primary content='Update' onClick={this._handleVideoCreate}/>
                     </div>
                   </Form>
                 </div>

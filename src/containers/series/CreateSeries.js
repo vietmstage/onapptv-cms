@@ -65,11 +65,11 @@ export default class CreateSeries extends Component {
     this.setState({episodes})
   }
 
-  _handleUpdateOriginalImage = (originalImage) => {
+  _handleUpdateoriginalImages = (originalImages) => {
     this.setState({
       videoData: {
         ...this.state.videoData,
-        originalImage
+        originalImages
       }
     })
   }
@@ -189,7 +189,7 @@ export default class CreateSeries extends Component {
           <Segment>
             <ThumbnailsList
               key={key}
-              onDataCallback={this._handleUpdateOriginalImage}
+              onDataCallback={this._handleUpdateoriginalImages}
             />
           </Segment>
         </Segment.Group>
@@ -211,24 +211,29 @@ export default class CreateSeries extends Component {
                     value={contentId}
                     onChange={this._handleInputChange}
                   />
-                  <Genres onDataCallback={this._handleUpdateGenres} genreIds={genreIds}/>
-                    
-                  <Tags onDataCallback={this._handleUpdateTags} tags={tags}/>
+
+                  <Form.Group widths='equal'>
+                    <Genres onDataCallback={this._handleUpdateGenres} genreIds={genreIds}/>
+                      
+                    <Tags onDataCallback={this._handleUpdateTags} tags={tags}/>
+                  </Form.Group>
 
                   <People onDataCallback={this._handleUpdatePeople} data={{directorIds, castIds, producerIds}}/>
+                  
+                  <Form.Group widths='equal'>
+                    <AllowedCountries onDataCallback={this._handleUdateCountries} allowedCountries={allowedCountries}/>
 
-                  <AllowedCountries onDataCallback={this._handleUdateCountries} allowedCountries={allowedCountries}/>
-
-                  <Form.Field>
-                    <label>Publish Date</label>
-                    <DateTime
-                      utc
-                      timeFormat={false}
-                      value={publishDate}
-                      name='publishDate'
-                      onChange={date => this._handleInputChange(null, {name: 'publishDate', value: new Date(date)})}
-                      closeOnSelect />
-                  </Form.Field>
+                    <Form.Field>
+                      <label>Publish Date</label>
+                      <DateTime
+                        utc
+                        timeFormat={false}
+                        value={publishDate || new Date()}
+                        name='publishDate'
+                        onChange={date => this._handleInputChange(null, {name: 'publishDate', value: new Date(date)})}
+                        closeOnSelect />
+                    </Form.Field>
+                  </Form.Group>
                 </Form>
               </div>
             </div>
@@ -274,7 +279,7 @@ export default class CreateSeries extends Component {
                     <Table.Row key={index}>
                       <Table.Cell>{episode.title}</Table.Cell>
                       <Table.Cell>{episode.shortDescription}</Table.Cell>
-                      <Table.Cell>{episode.duration_in_seconds}</Table.Cell>
+                      <Table.Cell>{episode.durationInSeconds}</Table.Cell>
                       <Table.Cell>
                         <div>
                           <Popup

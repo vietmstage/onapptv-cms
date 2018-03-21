@@ -139,42 +139,44 @@ export default class People extends Component {
     } = this.state
     return (
       <React.Fragment>
-        <Form.Field>
-          <label>Director:</label>
-          <DropDown
-            name='directorIds'
-            options={directorOptions}
-            placeholder='Choose director'
-            search selection fluid multiple allowAdditions
-            value={directorIds}
-            onAddItem={this._handleAddNewItem}
-            onChange={this._handleInputChange}
-          />
-        </Form.Field>
-        <Form.Field>
-          <label>Cast:</label>
-          <DropDown
-            name='castIds'
-            options={castOptions}
-            placeholder='Choose cast'
-            search selection fluid multiple allowAdditions
-            value={castIds}
-            onAddItem={this._handleAddNewItem}
-            onChange={this._handleInputChange}
-          />
-        </Form.Field>
-        <Form.Field>
-          <label>Producer:</label>
-          <DropDown
-            name='producerIds'
-            options={producerOptions}
-            placeholder='Choose producer'
-            search selection fluid multiple allowAdditions
-            value={producerIds}
-            onAddItem={this._handleAddNewItem}
-            onChange={this._handleInputChange}
-          />
-        </Form.Field>
+        <Form.Group widths='equal'>
+          <Form.Field>
+            <label>Director:</label>
+            <DropDown
+              name='directorIds'
+              options={directorOptions}
+              placeholder='Choose director'
+              search selection fluid multiple allowAdditions
+              value={directorIds}
+              onAddItem={this._handleAddNewItem}
+              onChange={this._handleInputChange}
+            />
+          </Form.Field>
+          <Form.Field>
+            <label>Cast:</label>
+            <DropDown
+              name='castIds'
+              options={castOptions}
+              placeholder='Choose cast'
+              search selection fluid multiple allowAdditions
+              value={castIds}
+              onAddItem={this._handleAddNewItem}
+              onChange={this._handleInputChange}
+            />
+          </Form.Field>
+          <Form.Field>
+            <label>Producer:</label>
+            <DropDown
+              name='producerIds'
+              options={producerOptions}
+              placeholder='Choose producer'
+              search selection fluid multiple allowAdditions
+              value={producerIds}
+              onAddItem={this._handleAddNewItem}
+              onChange={this._handleInputChange}
+            />
+          </Form.Field>
+        </Form.Group>
         <Modal open={modalOpen}>
           <Modal.Header>
             Create new role

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
-import { Table, Segment, Input, Button, Popup } from 'semantic-ui-react'
+import { Table, Segment, Input, Button, Popup, Checkbox } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
 import { getVideos, videoSearch } from '../../actions/video'
@@ -15,7 +15,8 @@ export default class VideoList extends Component {
     activePage: 1,
     pageSize: 20,
     items: [],
-    total: 0
+    total: 0,
+    selected: []
   }
 
   componentDidMount () {
@@ -43,18 +44,21 @@ export default class VideoList extends Component {
         const {items, count} = data
         this.setState({
           items,
-          total: count
+          total: count,
+          selected: []
         })
       })
       return
     }
     getVideos(activePage, pageSize).then(result => {
-      if(!result) return
-      const {items, count} = result.data.viewer.data
-      this.setState({
-        items,
-        total: count
-      })
+      if (result && !result.errors) {
+        const {items, count} = result.data
+        this.setState({
+          items,
+          total: count,
+          selected: []
+        })
+      }
     })
   }
 
@@ -76,10 +80,27 @@ export default class VideoList extends Component {
     this.setState({pageSize: data.value}, this._handleGetVideos)
   }
 
+  _handleSelect = (id) => {
+    const {selected} = this.state
+    const index = selected.indexOf(id)
+    if (index !== -1) selected.splice(index, 1)
+    else selected.push(id)
+    this.setState({selected})
+  }
+
+  _handleSelectAll = (items) => {
+    const {selected} = this.state
+    if (selected.length >= items.length) this.setState({selected: []})
+    else {
+      const newSelected = items.map(item => item._id)
+      this.setState({selected: newSelected})
+    }
+  }
+
   render() {
     ChangeTitle('Video List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected} = this.state
 
     return (
       <div>
@@ -110,6 +131,12 @@ export default class VideoList extends Component {
                 placeholder='Enter search string...' />
             </div>
             <div>
+              {items.length > 0 && <Button
+                size='tiny'
+                content='Archive selected videos'
+                negative
+                disabled={selected.length === 0}
+                onClick={() => this.setState({showBulkConfirm: true})} />}
               <Button
                 size='tiny'
                 primary
@@ -122,23 +149,34 @@ export default class VideoList extends Component {
         <Table>
           <Table.Header>
             <Table.Row>
+              <Table.HeaderCell style={{width: 50}}>
+                <Checkbox
+                  checked={selected.length === items.length}
+                  indeterminate={selected.length < items.length && selected.length > 0}
+                  onClick={() => this._handleSelectAll(items)}
+                />
+              </Table.HeaderCell>
               <Table.HeaderCell style={{width: 90}}></Table.HeaderCell>
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Type</Table.HeaderCell>
-              <Table.HeaderCell>Etc...</Table.HeaderCell>
               <Table.HeaderCell style={{width: 76}}>Action</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {items.map((item, index) => {
               return (
-                <Table.Row key={index}>
+                <Table.Row
+                  key={index}
+                  className={selected.indexOf(item._id) !== -1 ? 'selected-row' : ''}
+                  onClick={() => this._handleSelect(item._id)}
+                >
+                  <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                   <Table.Cell>
                     <div>
-                      {item.originalImage && !!item.originalImage.length && <img
-                        src={item.originalImage && item.originalImage[item.originalImage.length - 1].url}
-                        alt={(item.originalImage && item.originalImage[item.originalImage.length - 1].name) || ''}
+                      {item.originalImages && !!item.originalImages.length && <img
+                        src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
+                        alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                         style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                       />}
                     </div>
@@ -146,7 +184,6 @@ export default class VideoList extends Component {
                   <Table.Cell>{item.title}</Table.Cell>
                   <Table.Cell>{item.shortDescription}</Table.Cell>
                   <Table.Cell>{item.type}</Table.Cell>
-                  <Table.Cell>Etc...</Table.Cell>                  
                   <Table.Cell>
                     <div>
                       <Popup

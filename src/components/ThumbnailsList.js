@@ -5,17 +5,36 @@ import {Form, Dimmer, Loader, Icon} from 'semantic-ui-react'
 export default class ThumbnailsList extends Component {
   static propTypes = {
     onDataCallback: PropTypes.func,
-    multiple: PropTypes.bool
+    multiple: PropTypes.bool,
+    data: PropTypes.array,
+    isEdit: PropTypes.bool
   }
 
   static defaultProps = {
-    multiple: true
+    multiple: true,
+    isEdit: false
   }
 
   state = {
     totalThumb: 0,
     thumbnails: [],
     thumbnailsData: []
+  }
+
+  componentDidMount () {
+    const {isEdit, data} = this.props
+
+    if (isEdit && data.length) {
+      let thumbnails = []
+      data.map(item => thumbnails.push({
+        url: item.url
+      }))
+      this.setState({
+        thumbnails,
+        thumbnailsData: data,
+        totalThumb: data.length
+      })
+    }
   }
 
   _renderTempThumb = () => {

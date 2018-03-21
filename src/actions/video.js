@@ -1,5 +1,38 @@
-import {graphqlClient, client} from './graphql'
-import gql from 'graphql-tag';
+import {client} from './graphql'
+const originalImages = `
+  originalImages {
+    fileName
+    name
+    url
+    scaledImage {
+      height
+      width
+      url
+    }
+  }
+`
+const videoOutput = `
+  _id
+  contentId
+  durationInSeconds
+  publishDate
+  title
+  longDescription
+  shortDescription
+  seriesId
+  seasonIndex
+  episodeIndex
+  ${originalImages}
+  type
+  updatedAt
+  createdAt
+  genreIds
+  producerIds
+  directorIds
+  tags
+  feature
+  allowedCountries
+`
 export const getVideos = (page = 1, perPage = 20) => {
   return client.query(`
     query {
@@ -7,38 +40,26 @@ export const getVideos = (page = 1, perPage = 20) => {
         data: videoPagination (page: ${page}, perPage: ${perPage}) {
           count
           items {
-            _id
-            contentId
-            duration_in_seconds
-            publishDate
-            title
-            longDescription
-            shortDescription
-            seriesId
-            seasonIndex
-            episodeIndex
-            originalImage {
-              fileName
-              name
-              url
-            }
-            type
-            updatedAt
-            createdAt
+            ${videoOutput}
           }
         }
       }
     }
-  `).then(data => data).catch(error => console.error(error))
+  `).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.viewer.data}
+    }
+    return result
+  }).catch(error => console.error(error))
 }
 
-export const getVideoDetail = (contentId) => {
+export const getVideoByContentId = (contentId) => {
   return client.query(`
     query ($contentId: String!) {
       viewer {
         brightcoveSearchVideo(contentId: $contentId) {
           contentId
-          duration_in_seconds
+          durationInSeconds
           publishDate
           title
           longDescription
@@ -48,15 +69,7 @@ export const getVideoDetail = (contentId) => {
           episodeIndex
           tags
           genreIds
-          originalImage {
-            fileName
-            name
-            scaledImage {
-              height
-              width
-              url
-            }
-          }
+          ${originalImages}
           type
         }
         videoOne(filter:{contentId: $contentId}) {
@@ -88,14 +101,7 @@ export const videoSearch = (text, limit = 10, skip = 0) => {
           items: hits {
             _id
             data: fromMongo {
-              _id
-              title
-              shortDescription
-              duration_in_seconds
-              originalImage {
-                url
-                name
-              }
+              ${videoOutput}
             }
           }
         }
@@ -130,4 +136,38 @@ export const updateSeriesId = (seriesId, ids) => {
       }
     }
   `, {seriesId, ids}).then(result => result).catch(err => console.error(err))
+}
+
+export const getVideoById = (id) => {
+  return client.query(`
+    query {
+      viewer {
+        videoById(_id: "${id}") {
+          ${videoOutput}
+        }
+      }
+    }
+  `).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.viewer.videoById}
+    }
+    return result
+  }).catch(err => console.error(err))
+}
+
+export const updateVideo = (data) => {
+  return client.query(`
+    mutation ($data: UpdateByIdvideotypeInput!){
+      admin {
+        videoUpdateById (record: $data) {
+          recordId
+        }
+      }
+    }
+  `, {data}).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.admin.videoUpdateById}
+    }
+    return result
+  })
 }

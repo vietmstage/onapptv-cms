@@ -10,7 +10,7 @@ export const getAds = (page = 1, perPage = 20) => {
             _id
             deal
             url
-            originalImage {
+            originalImages {
               url
               name
             }
@@ -47,7 +47,7 @@ export const adsSearch = (text, limit = 10, skip = 0) => {
               _id
               deal
               url
-              originalImage {
+              originalImages {
                 url
                 name
               }

@@ -12,7 +12,7 @@ export const getNews = (page = 1, perPage = 20) => {
             longDescription
             shortDescription
             url
-            originalImage {
+            originalImages {
               url
               name
             }
@@ -52,7 +52,7 @@ export const newsSearch = (text, limit = 10, skip = 0) => {
               longDescription
               shortDescription
               url
-              originalImage {
+              originalImages {
                 url
                 name
               }

@@ -1,16 +1,20 @@
 import React, { Component } from 'react'
-import {Segment, Button, Divider, Form, Modal, Icon, Table, Popup} from 'semantic-ui-react'
-import ThumbnailsList from '../../components/ThumbnailsList'
+import PropTypes from 'prop-types'
+import { Segment, Button, Divider, Form, Modal, Icon, Table, Popup, Dimmer, Loader } from 'semantic-ui-react'
 import Description from '../../components/Description'
-import { channelCreate, channelAddEPGs, addEPG, updateChannel } from '../../actions/channel';
-import { toast } from 'react-toastify';
-import ChangeTitle from '../../libs/ChangeTitle';
-import DropDown from '../../components/common/Dropdown';
-import debounce from 'lodash/debounce'
-import { videoSearch } from '../../actions/video'
+import ThumbnailsList from '../../components/ThumbnailsList'
+import DropDown from '../../components/common/Dropdown'
+import { getChannelById, channelAddEPGs, updateChannel, addEPG } from '../../actions/channel'
+import {toast} from 'react-toastify'
 import DateTime from 'react-datetime'
 import findIndex from 'lodash/findIndex'
-export default class CreateChannel extends Component {
+import debounce from 'lodash/debounce'
+import {videoSearch} from '../../actions/video'
+export default class EditChannel extends Component {
+  static propTypes = {
+
+  }
+
   state = {
     videoData: {},
     key: '',
@@ -19,6 +23,31 @@ export default class CreateChannel extends Component {
     startTime: '',
     endTime: '',
     epgList: [],
+    loadingChannel: false
+  }
+
+  componentWillMount () {
+    const {match: {params: {channelId}}} = this.props
+    if (channelId) {
+      this.setState({loadingChannel: true})
+      getChannelById(channelId).then(result => {
+        if (result && !result.errors) {
+          let epgList = []
+          const {epgsData} = result.data
+          epgsData.map(epg => epgList.push({
+            videoId: epg.videoId,
+            title: epg.videoData.title,
+            startTime: epg.startTime,
+            endTime: epg.endTime
+          }))
+          delete result.data.epgsData
+          this.setState({videoData: result.data, loadingChannel: false, epgList})
+        } else {
+          this.setState({loadingChannel: false})
+          toast.error('Can not get video detail.')
+        }
+      })
+    }
   }
 
   _handleInputChange = (e, {name, value}) => {
@@ -47,22 +76,19 @@ export default class CreateChannel extends Component {
       }
     })
   }
-  
-  _handleCreate = () => {
-    const {videoData, epgList} = this.state
-    channelCreate(videoData).then(result => {
+
+  _handleUpdate = () => {
+    const {videoData} = this.state
+    updateChannel(videoData).then(result => {
       if(!(result.errors && result.errors.length)) {
-        if(epgList.length) {
-          this._handleUpdateChanelEPG(result.data.admin.channelCreate.recordId)
-        } else {
-          toast.success('Create new channel successfully!')
-          this.setState({
-            videoData: {},
-            key: new Date().getTime().toString()
-          })
-        }
+        this.props.history.push('/channel/list')
+        toast.success('Update channel successfully!')
+        this.setState({
+          videoData: {},
+          epgList: []
+        })
       } else {
-        toast.error('Create faield!!')
+        toast.error('Update channel faield!!')
       }
     })
   }
@@ -102,29 +128,20 @@ export default class CreateChannel extends Component {
     }).then(result => {
       if (result && !result.errors) {
         const {recordId} = result.data
-        // let {videoData} = this.state
-        // videoData.epgIds.push(recordId)
+        let {videoData} = this.state
+        videoData.epgIds.push(recordId)
         epgList.push({
-          id: recordId,
           videoId,
           startTime,
           endTime,
           title
         })
         this.setState({
-          epgList
+          epgList,
+          videoData
         }, this._handleModalClose)
       }
     })
-    // epgList.push({
-    //   videoId,
-    //   startTime,
-    //   endTime,
-    //   title
-    // })
-    // this.setState({
-    //   epgList
-    // }, this._handleModalClose)
   }
 
   _handleRemveEPG = (index) => {
@@ -134,43 +151,50 @@ export default class CreateChannel extends Component {
     this.setState({epgList, videoData})
   }
 
-  _handleUpdateChanelEPG = (channelId) => {
-    let data = {_id: channelId, epgIds: []}
-    const {epgList} = this.state
-    epgList.forEach(item => data.epgIds.push(item.id))
+  // _handleChanelAddEPG = (channelId) => {
+  //   let data = []
+  //   const {epgList} = this.state
+  //   epgList.forEach(item => {
+  //     const {videoId, startTime, endTime} = item
+  //     data.push({videoId, startTime, endTime})
+  //   })
 
-    updateChannel(data).then(result => {
-      if(result && !result.errors) {
-        toast.success('Update channel successfully!')
-        this.setState({
-          videoData: {},
-          key: new Date().getTime().toString(),
-          epgList: []
-        })
-      } else {
-        toast.error('Update failed')
-      }
-    })
-  }
+  //   channelAddEPGs(channelId, data).then(result => {
+  //     if(!(result.errors && result.errors.length)) {
+  //       toast.success('Create new channel successfully!')
+  //       this.props.history.push('/channel/list')
+  //       this.setState({
+  //         videoData: {},
+  //         key: new Date().getTime().toString(),
+  //         epgList: []
+  //       })
+  //     } else {
+  //       toast.error('Cannot add EPG list to channel')
+  //     }
+  //   })
+  // }
 
   render() {
-    ChangeTitle('Create Channel')
-    const {videoData, key, modalOpen, videoOptions, videoId, startTime, endTime, epgList} = this.state
+    const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel} = this.state
+
+    if (loadingChannel) return <div className='div__loading-full'><Dimmer active inverted><Loader /></Dimmer></div>
+
     const {
       title = '',
       shortDescription = '',
-      longDescription = ''
+      longDescription = '',
+      originalImages = []
     } = videoData
     return (
-      <div key={key}>
-        <h2>Channel Detail</h2>
+      <div>
+        <h2>Update Channel</h2>
         <Divider />
         <Segment.Group>
           <Segment>
             <h4>Thumbnails Channel</h4>
           </Segment>
           <Segment>
-            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages}/>
+            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} data={originalImages} isEdit />
           </Segment>
         </Segment.Group>
         <Segment.Group>
@@ -277,7 +301,7 @@ export default class CreateChannel extends Component {
           </Segment>}
         </Segment.Group>
         <div style={{textAlign: 'right'}}>
-          <Button primary content='Create' onClick={this._handleCreate}/>
+          <Button primary content='Update' onClick={this._handleUpdate}/>
         </div>
       </div>
     )
