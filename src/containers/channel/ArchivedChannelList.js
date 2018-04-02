@@ -12,13 +12,13 @@ import { toast } from 'react-toastify';
     router: state.routing
   }
 })
-export default class ChannelList extends Component {
+export default class ArchivedChannelList extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
     searchString: '',
     activePage: 1,
-    pageSize: 10,
+    pageSize: 20,
     items: [],
     total: 0,
     confirmedSearchString: '',
@@ -64,7 +64,7 @@ export default class ChannelList extends Component {
       })
       return
     }
-    getChannel(activePage, pageSize).then(result => {
+    getChannel(activePage, pageSize, {state: 'archived'}).then(result => {
       if(!result || result.errors) return
       const {items, count} = result.data.viewer.data
       this.setState({
@@ -122,38 +122,38 @@ export default class ChannelList extends Component {
     this.setState({archivedItem, showConfirm: true})
   }
 
-  _handleArchive = () => {
+  _handleRestore = () => {
     const {archivedItem, isArchivingIds} = this.state
     isArchivingIds.push(archivedItem._id)
     this.setState({showConfirm: false, isArchivingIds})
     updateChannelMany(
-      {state: 'archived'},
+      {state: 'published'},
       {_ids: isArchivingIds}
     ).then(result => {
       if (result && !result.errors) {
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`Channel [${archivedItem.title}] archived successfully.`)
+        toast.success(`Channel [${archivedItem.title}] restored successfully.`)
         this._handleGetChannel()
       } else {
-        toast.error(`Channel [${archivedItem.title}] archived failed.`)
+        toast.error(`Channel [${archivedItem.title}] restored failed.`)
       }
     })
   }
 
-  _handleBulkArchive = () => {
+  _handleBulkRestore = () => {
     const {selected} = this.state
     this.setState({isArchivingIds: selected, showBulkConfirm: false})
     updateChannelMany(
-      {state: 'archived'},
+      {state: 'published'},
       {_ids: selected}
     ).then(result => {
       console.log(result)
       if (result && !result.errors) {
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`[${selected.length}] selected channels archived successfully.`)
+        toast.success(`[${selected.length}] selected channels restored successfully.`)
         this._handleGetChannel()
       } else {
-        toast.error(`Archived channels failed.`)
+        toast.error(`Restored channels failed.`)
       }
     })
   }
@@ -195,16 +195,10 @@ export default class ChannelList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Archive selected channels'
+                  content='Restore selected channels'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
-                <Button
-                  size='tiny'
-                  primary
-                  content='Add Channel'
-                  as={Link}
-                  to='/channel/add' />
               </div>
             </div>
           </Segment>
@@ -262,7 +256,7 @@ export default class ChannelList extends Component {
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
                         <Loader active size='mini' inline />
-                        <span style={{fontSize: '10px'}}> &nbsp; Archiving...</span>
+                        <span style={{fontSize: '10px'}}> &nbsp; Restoring...</span>
                       </div>
                       : <div>
                       <Popup
@@ -271,8 +265,8 @@ export default class ChannelList extends Component {
                         inverted
                       />
                       <Popup
-                        trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                        content='Archive this channel.'
+                        trigger={<Button icon='recycle' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
+                        content='Restore this channel.'
                         inverted
                       />
                     </div>}
@@ -296,15 +290,15 @@ export default class ChannelList extends Component {
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
-            onConfirm={this._handleArchive}
+            onConfirm={this._handleRestore}
           />
         <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to archive all these ${selected.length} selected videos?`}
+            content={`Are you sure to archive all these ${selected.length} selected channels?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}
-            onConfirm={this._handleBulkArchive}
+            onConfirm={this._handleBulkRestore}
           />
       </div>
     )

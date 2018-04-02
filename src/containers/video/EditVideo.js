@@ -115,6 +115,10 @@ export default class EditVideo extends Component {
 
   _handleVideoCreate = () => {
     const {videoData} = this.state
+    if (!videoData.originalImages || videoData.originalImages.length === 0) {
+      toast.error('Please choose thumbnails for video')
+      return
+    }
     updateVideo(videoData).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Update video successfully!')

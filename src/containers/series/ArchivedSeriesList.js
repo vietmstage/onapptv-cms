@@ -1,77 +1,75 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
-import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Confirm, Dimmer } from 'semantic-ui-react'
+import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Dimmer, Confirm } from 'semantic-ui-react'
+import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
-import { getChannel, channelSearch, updateChannelMany } from '../../actions/channel';
 import Pagination from '../../components/common/Pagination'
-import {connect} from 'react-redux'
-import { toast } from 'react-toastify';
-@connect(state => {
-  return {
-    router: state.routing
-  }
-})
-export default class ChannelList extends Component {
+import { getSeries, seriesSearch, updateSeriesMany } from '../../actions/series';
+import {toast} from 'react-toastify'
+export default class ArchivedSeriesList extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
     searchString: '',
     activePage: 1,
-    pageSize: 10,
+    pageSize: 20,
     items: [],
     total: 0,
     confirmedSearchString: '',
     selected: [],
-    isLoading: false,
-    showConfirm: false,
-    showBulkConfirm: false,
+    isLoading: true,
+    archivedItem: {},
     isArchivingIds: [],
-    archivedItem: {}
+    showConfirm: false,
+    showBulkConfirm: false
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetChannel)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetSeries)
     } else {
-      this._handleGetChannel()
+      this._handleGetSeries()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetChannel)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetSeries)
     }
   }
-  
 
-  _handleGetChannel = () => {
+  _handleGetSeries = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
-    if(confirmedSearchString.length !== 0) {
-      channelSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+    if (confirmedSearchString.length !== 0) {
+      seriesSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        this.setState({isLoading: false, isSearching: false})
         if(!data) {
-          toast.error('Cannot search channel!')
+          toast.error('Cannot search series!')
           return
         }
         const {items, count} = data
         this.setState({
           items,
           total: count,
-          selected: [],
-          isLoading: false
+          selected: []
         })
       })
       return
     }
-    getChannel(activePage, pageSize).then(result => {
-      if(!result || result.errors) return
+    getSeries(activePage, pageSize, {state: 'archived'}).then(result => {
+      this.setState({isLoading: false, isSearching: false})
+      if(!result) return
+      if(result.errors && result.errors.length) {
+        toast.error('Cannot get series list!')
+        return
+      }
       const {items, count} = result.data.viewer.data
       this.setState({
         items,
         total: count,
-        selected: [],
-        isLoading: false
+        selected: []
       })
     })
   }
@@ -83,21 +81,21 @@ export default class ChannelList extends Component {
   _handleSearch = () => {
     const {searchString, confirmedSearchString} = this.state
     if (confirmedSearchString !== searchString) {
-      this.setState({isSearching: true})
+      this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false}, this._handleGetChannel)
+        this.setState({confirmedSearchString: searchString}, this._handleGetSeries)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetChannel)
+    this.setState({pageSize: data.value}, this._handleGetSeries)
   }
 
   _handlePaginationChange = (e, {activePage}) => {
     this.setState({
       activePage
-    }, this._handleGetChannel )
+    }, this._handleGetSeries )
   }
 
   _handleSelect = (id) => {
@@ -122,52 +120,51 @@ export default class ChannelList extends Component {
     this.setState({archivedItem, showConfirm: true})
   }
 
-  _handleArchive = () => {
+  _handleRestore = () => {
     const {archivedItem, isArchivingIds} = this.state
     isArchivingIds.push(archivedItem._id)
     this.setState({showConfirm: false, isArchivingIds})
-    updateChannelMany(
-      {state: 'archived'},
+    updateSeriesMany(
+      {state: 'published'},
       {_ids: isArchivingIds}
     ).then(result => {
       if (result && !result.errors) {
+        toast.success(`Series [${archivedItem.title}] restored successfully.`)
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`Channel [${archivedItem.title}] archived successfully.`)
-        this._handleGetChannel()
+        this._handleGetSeries()
       } else {
-        toast.error(`Channel [${archivedItem.title}] archived failed.`)
+        toast.error(`Series [${archivedItem.title}] restored failed.`)
       }
     })
   }
 
-  _handleBulkArchive = () => {
+  _handleBulkRestore = () => {
     const {selected} = this.state
     this.setState({isArchivingIds: selected, showBulkConfirm: false})
-    updateChannelMany(
-      {state: 'archived'},
+    updateSeriesMany(
+      {state: 'published'},
       {_ids: selected}
     ).then(result => {
-      console.log(result)
       if (result && !result.errors) {
+        toast.success(`[${selected.length}] selected series restored successfully.`)
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`[${selected.length}] selected channels archived successfully.`)
-        this._handleGetChannel()
+        this._handleGetSeries()
       } else {
-        toast.error(`Archived channels failed.`)
+        toast.error(`Restored series failed.`)
       }
     })
   }
 
   render() {
-    ChangeTitle('Channel List')
+    ChangeTitle('Series List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, showConfirm, showBulkConfirm, isArchivingIds} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showConfirm, showBulkConfirm} = this.state
 
     return (
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Channel List</h2>
+            <h2>Series List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -195,16 +192,10 @@ export default class ChannelList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Archive selected channels'
+                  content='Restore selected series'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
-                <Button
-                  size='tiny'
-                  primary
-                  content='Add Channel'
-                  as={Link}
-                  to='/channel/add' />
               </div>
             </div>
           </Segment>
@@ -213,26 +204,25 @@ export default class ChannelList extends Component {
               : <i style={{color: '#999'}}>
                 Sorry. There's nothing to show.
               </i>}
-          </Segment>
-          }
+          </Segment>}
         </Segment.Group>
         {!!items.length && <div style={{position: 'relative'}}>
           {isLoading && <Dimmer active inverted><Loader /></Dimmer>}
           <Table>
             <Table.Header>
-              <Table.Row> 
-                <Table.HeaderCell style={{width: 50}}>
+              <Table.Row>
+                <Table.HeaderCell style={{width: 40}}>
                   <Checkbox
                     checked={selected.length === items.length}
                     indeterminate={selected.length < items.length && selected.length > 0}
                     onClick={() => this._handleSelectAll(items)}
                   />
                 </Table.HeaderCell>
+                <Table.HeaderCell style={{width: 40}}>#</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 90}}/>
                 <Table.HeaderCell>Title</Table.HeaderCell>
                 <Table.HeaderCell>Description</Table.HeaderCell>
                 <Table.HeaderCell>Type</Table.HeaderCell>
-                <Table.HeaderCell>Etc...</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 100}}>Action</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -245,8 +235,9 @@ export default class ChannelList extends Component {
                     onClick={() => this._handleSelect(item._id)}
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
+                    <Table.Cell>{index + 1}</Table.Cell>
                     <Table.Cell>
-                      <div>
+                      <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
                         {!!item.originalImages.length && <img
                           src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
                           alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
@@ -254,58 +245,58 @@ export default class ChannelList extends Component {
                         />}
                       </div>
                     </Table.Cell>
-                    <Table.Cell><Link to={'/channel/edit/' + item._id}>{item.title}</Link></Table.Cell>
+                    <Table.Cell><Link to={'/series/edit/' + item._id}>{item.title}</Link></Table.Cell>
                     <Table.Cell>{item.shortDescription}</Table.Cell>
                     <Table.Cell>{item.type}</Table.Cell>
-                    <Table.Cell>Etc...</Table.Cell>                  
                     <Table.Cell>
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
                         <Loader active size='mini' inline />
-                        <span style={{fontSize: '10px'}}> &nbsp; Archiving...</span>
+                        <span style={{fontSize: '10px'}}> &nbsp; Restoring...</span>
                       </div>
-                      : <div>
-                      <Popup
-                        trigger={<Button icon='edit' size='mini' as={Link} to={`/channel/edit/${item._id}`} />}
-                        content='Edit this channel.'
-                        inverted
-                      />
-                      <Popup
-                        trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                        content='Archive this channel.'
-                        inverted
-                      />
-                    </div>}
+                      : 
+                      <div>
+                        <Popup
+                          trigger={<Button icon='edit' size='mini' as={Link} to={`/series/edit/${item._id}`} />}
+                          content='Edit this series.'
+                          inverted
+                        />
+                        <Popup
+                          trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
+                          content='Restore this series.'
+                          inverted
+                        />
+                      </div>}
                     </Table.Cell>
                   </Table.Row>
                 )
               })}
             </Table.Body>
           </Table>
-        </div>}
-        <Pagination
-          currentPage={activePage}
-          pageSize={pageSize}
-          total={total}
-          history={history}
-          onchangeSize={this._changePageSize}
-          url='/channel/list' />
-        <Confirm
+          <Pagination
+            currentPage={activePage}
+            pageSize={pageSize}
+            total={total}
+            history={history}
+            onchangeSize={this._changePageSize}
+            url='/series/list' />
+          <Confirm
             open={showConfirm}
-            content={`Are you sure to archive video [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to restore series [${this.state.archivedItem.title || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
-            onConfirm={this._handleArchive}
+            onConfirm={this._handleRestore}
           />
-        <Confirm
+          <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to archive all these ${selected.length} selected videos?`}
+            content={`Are you sure to restore all these ${selected.length} selected series?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}
-            onConfirm={this._handleBulkArchive}
+            onConfirm={this._handleBulkRestore}
           />
+        </div>}
       </div>
     )
   }

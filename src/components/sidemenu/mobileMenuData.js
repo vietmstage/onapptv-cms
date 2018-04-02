@@ -1,6 +1,6 @@
 const mobileMenuData = [
   {
-    title: 'News Manager',
+    title: 'News',
     items: [
       {
         title: 'News list',
@@ -20,7 +20,7 @@ const mobileMenuData = [
     ]
   },
   {
-    title: 'Ads Manager',
+    title: 'Ads',
     items: [
       {
         title: 'Ads list',

@@ -1,55 +1,48 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
-import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Confirm, Dimmer } from 'semantic-ui-react'
+import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Dimmer, Confirm } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
-import { getChannel, channelSearch, updateChannelMany } from '../../actions/channel';
+import { getVideos, videoSearch, updateVideoMany } from '../../actions/video'
 import Pagination from '../../components/common/Pagination'
-import {connect} from 'react-redux'
-import { toast } from 'react-toastify';
-@connect(state => {
-  return {
-    router: state.routing
-  }
-})
-export default class ChannelList extends Component {
+import {toast} from 'react-toastify'
+export default class ArchivedVideoList extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
+    confirmedSearchString: '',
     searchString: '',
     activePage: 1,
     pageSize: 10,
     items: [],
     total: 0,
-    confirmedSearchString: '',
     selected: [],
-    isLoading: false,
+    isArchivingIds: [],
     showConfirm: false,
     showBulkConfirm: false,
-    isArchivingIds: [],
     archivedItem: {}
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetChannel)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetVideos)
     } else {
-      this._handleGetChannel()
+      this._handleGetVideos()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetChannel)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetVideos)
     }
   }
-  
 
-  _handleGetChannel = () => {
+  _handleGetVideos = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
-    if(confirmedSearchString.length !== 0) {
-      channelSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+    if (confirmedSearchString.length !== 0) {
+      videoSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        this.setState({isLoading: false, isSearching: false})
         if(!data) {
           toast.error('Cannot search channel!')
           return
@@ -58,21 +51,21 @@ export default class ChannelList extends Component {
         this.setState({
           items,
           total: count,
-          selected: [],
-          isLoading: false
+          selected: []
         })
       })
       return
     }
-    getChannel(activePage, pageSize).then(result => {
-      if(!result || result.errors) return
-      const {items, count} = result.data.viewer.data
-      this.setState({
-        items,
-        total: count,
-        selected: [],
-        isLoading: false
-      })
+    getVideos(activePage, pageSize, {state: 'archived'}).then(result => {
+      this.setState({isLoading: false, isSearching: false})
+      if (result && !result.errors) {
+        const {items, count} = result.data
+        this.setState({
+          items,
+          total: count,
+          selected: []
+        })
+      }
     })
   }
 
@@ -83,21 +76,15 @@ export default class ChannelList extends Component {
   _handleSearch = () => {
     const {searchString, confirmedSearchString} = this.state
     if (confirmedSearchString !== searchString) {
-      this.setState({isSearching: true})
+      this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, isSearching: false}, this._handleGetChannel)
+        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetVideos)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetChannel)
-  }
-
-  _handlePaginationChange = (e, {activePage}) => {
-    this.setState({
-      activePage
-    }, this._handleGetChannel )
+    this.setState({pageSize: data.value}, this._handleGetVideos)
   }
 
   _handleSelect = (id) => {
@@ -122,52 +109,72 @@ export default class ChannelList extends Component {
     this.setState({archivedItem, showConfirm: true})
   }
 
-  _handleArchive = () => {
-    const {archivedItem, isArchivingIds} = this.state
+  _handleRestore = () => {
+    const {archivedItem, selected, isArchivingIds} = this.state
     isArchivingIds.push(archivedItem._id)
     this.setState({showConfirm: false, isArchivingIds})
-    updateChannelMany(
-      {state: 'archived'},
+    // setTimeout(() => {
+    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
+    //   archivedCompanies.push(archivedItem._id)
+    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
+    //   selected.splice(selected.indexOf(archivedItem._id), 1)
+    //   isLoading.splice(isLoading.indexOf(archivedItem._id), 1)
+    //   this.setState({selected, isLoading})
+    //   toast.success(`Company [${archivedItem.name}] archived successfully.`)
+    // }, 1000)
+    updateVideoMany(
+      {state: 'published'},
       {_ids: isArchivingIds}
     ).then(result => {
       if (result && !result.errors) {
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`Channel [${archivedItem.title}] archived successfully.`)
-        this._handleGetChannel()
+        toast.success(`Video [${archivedItem.title}] restored successfully.`)
+        this._handleGetVideos()
       } else {
-        toast.error(`Channel [${archivedItem.title}] archived failed.`)
+        toast.error(`Video [${archivedItem.title}] restored failed.`)
       }
     })
   }
 
-  _handleBulkArchive = () => {
-    const {selected} = this.state
+  _handleBulkRestore = () => {
+    const {selected, companies} = this.state
+    // const tmp = cloneDeep(companies)
     this.setState({isArchivingIds: selected, showBulkConfirm: false})
-    updateChannelMany(
-      {state: 'archived'},
+    // setTimeout(() => {
+    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
+    //   tmp.map((company, index) => {
+    //     if (selected.indexOf(company._id) !== -1) archivedCompanies.push(company._id)
+    //     return null
+    //   })
+    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
+    //   this.setState({isLoading: [], selected: []})
+    //   toast.success(`${selected.length} selected companies archived successfully.`)
+    // }, 2000)
+    updateVideoMany(
+      {state: 'published'},
       {_ids: selected}
     ).then(result => {
       console.log(result)
       if (result && !result.errors) {
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        toast.success(`[${selected.length}] selected channels archived successfully.`)
-        this._handleGetChannel()
+        toast.success(`[${selected.length}] selected videos restored successfully.`)
+        this._handleGetVideos()
       } else {
-        toast.error(`Archived channels failed.`)
+        toast.error(`Restored videos failed.`)
       }
     })
   }
 
   render() {
-    ChangeTitle('Channel List')
+    ChangeTitle('Video List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, showConfirm, showBulkConfirm, isArchivingIds} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showBulkConfirm, showConfirm} = this.state
 
     return (
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Channel List</h2>
+            <h2>Video List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -195,16 +202,10 @@ export default class ChannelList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Archive selected channels'
+                  content='Restore videos'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
-                <Button
-                  size='tiny'
-                  primary
-                  content='Add Channel'
-                  as={Link}
-                  to='/channel/add' />
               </div>
             </div>
           </Segment>
@@ -220,19 +221,19 @@ export default class ChannelList extends Component {
           {isLoading && <Dimmer active inverted><Loader /></Dimmer>}
           <Table>
             <Table.Header>
-              <Table.Row> 
-                <Table.HeaderCell style={{width: 50}}>
+              <Table.Row>
+                <Table.HeaderCell style={{width: 40}}>
                   <Checkbox
                     checked={selected.length === items.length}
                     indeterminate={selected.length < items.length && selected.length > 0}
                     onClick={() => this._handleSelectAll(items)}
                   />
                 </Table.HeaderCell>
-                <Table.HeaderCell style={{width: 90}}/>
+                <Table.HeaderCell style={{width: 40}}>#</Table.HeaderCell>
+                <Table.HeaderCell style={{width: 90}}></Table.HeaderCell>
                 <Table.HeaderCell>Title</Table.HeaderCell>
                 <Table.HeaderCell>Description</Table.HeaderCell>
                 <Table.HeaderCell>Type</Table.HeaderCell>
-                <Table.HeaderCell>Etc...</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 100}}>Action</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -245,67 +246,67 @@ export default class ChannelList extends Component {
                     onClick={() => this._handleSelect(item._id)}
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
+                    <Table.Cell>{index + 1}</Table.Cell>
                     <Table.Cell>
-                      <div>
-                        {!!item.originalImages.length && <img
+                      <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
+                        {item.originalImages && !!item.originalImages.length && <img
                           src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
                           alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                           style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                         />}
                       </div>
                     </Table.Cell>
-                    <Table.Cell><Link to={'/channel/edit/' + item._id}>{item.title}</Link></Table.Cell>
+                    <Table.Cell><Link to={'/video/edit/' + item._id}>{item.title}</Link></Table.Cell>
                     <Table.Cell>{item.shortDescription}</Table.Cell>
                     <Table.Cell>{item.type}</Table.Cell>
-                    <Table.Cell>Etc...</Table.Cell>                  
                     <Table.Cell>
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
                         <Loader active size='mini' inline />
-                        <span style={{fontSize: '10px'}}> &nbsp; Archiving...</span>
+                        <span style={{fontSize: '10px'}}> &nbsp; Restoring...</span>
                       </div>
                       : <div>
-                      <Popup
-                        trigger={<Button icon='edit' size='mini' as={Link} to={`/channel/edit/${item._id}`} />}
-                        content='Edit this channel.'
-                        inverted
-                      />
-                      <Popup
-                        trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                        content='Archive this channel.'
-                        inverted
-                      />
-                    </div>}
+                        <Popup
+                          trigger={<Button icon='edit' size='mini' as={Link} to={`/video/edit/${item._id}`} />}
+                          content='Edit this video.'
+                          inverted
+                        />
+                        <Popup
+                          trigger={<Button icon='recycle' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
+                          content='Restore this video.'
+                          inverted
+                        />
+                      </div>}
                     </Table.Cell>
                   </Table.Row>
                 )
               })}
             </Table.Body>
           </Table>
-        </div>}
-        <Pagination
-          currentPage={activePage}
-          pageSize={pageSize}
-          total={total}
-          history={history}
-          onchangeSize={this._changePageSize}
-          url='/channel/list' />
-        <Confirm
+          <Pagination
+            currentPage={activePage}
+            pageSize={pageSize}
+            total={total}
+            history={history}
+            onchangeSize={this._changePageSize}
+            url='/video/list' />
+          <Confirm
             open={showConfirm}
-            content={`Are you sure to archive video [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to restore video [${this.state.archivedItem.title || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
-            onConfirm={this._handleArchive}
+            onConfirm={this._handleRestore}
           />
-        <Confirm
+          <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to archive all these ${selected.length} selected videos?`}
+            content={`Are you sure to restore all these ${selected.length} selected videos?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}
-            onConfirm={this._handleBulkArchive}
+            onConfirm={this._handleBulkRestore}
           />
+        </div>}
       </div>
     )
   }

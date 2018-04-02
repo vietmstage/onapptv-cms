@@ -24,7 +24,7 @@ export default class ThumbnailsList extends Component {
   componentDidMount () {
     const {isEdit, data} = this.props
 
-    if (isEdit && data.length) {
+    if (isEdit && data && data.length) {
       let thumbnails = []
       data.map(item => thumbnails.push({
         url: item.url

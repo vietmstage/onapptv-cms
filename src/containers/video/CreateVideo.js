@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {Segment, Form, Button, Divider} from 'semantic-ui-react'
+import {Segment, Form, Button, Divider, Loader, Tab} from 'semantic-ui-react'
 import DropDown from '../../components/common/Dropdown'
 import { getVideoByContentId, createVideo } from '../../actions/video'
 import DateTime from 'react-datetime'
@@ -21,33 +21,47 @@ export default class CreateVideo extends Component {
     videoSource: '',
     seriesOptions: [],
     videoData: {},
-    key: ''
+    key: '',
+    isLoadingVideo: false,
+    showForm: false
   }
 
-  _handleGetVideo = () => {
+  _handleGetVideo = (type = 'brightcove') => {
     const {contentId} = this.state
-    getVideoByContentId(contentId).then(result => {
+    this.setState({isLoadingVideo: true})
+    getVideoByContentId(contentId, type).then(result => {
+      this.setState({isLoadingVideo: false})
+      console.log(result)
       if (!result) {
-        toast.error('Can\'t get brightcove video detail')
+        toast.error('Can\'t get video detail')
         return
       }
-      if (result.data.viewer.videoOne !== null) {
+      if (result.errors) {
+        toast.error(result.errors[0].message)
+        return
+      }
+      if (result.videoOne !== null) {
         toast.error('This video had created!')
         return
       }
-      const data = result.data.viewer.brightcoveSearchVideo
+      const {data} = result
       let videoData = {...data}
       delete videoData['__typename']
 
       this.setState({
         videoData,
-        key: new Date().getTime().toString()
+        key: new Date().getTime().toString(),
+        showForm: true
       })
     })
   }
 
   _handleVideoCreate = () => {
     const {videoData} = this.state
+    if (!videoData.originalImages || videoData.originalImages.length === 0) {
+      toast.error('Please choose thumbnails for video.')
+      return
+    }
     createVideo(videoData).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Create video successfully!')
@@ -138,9 +152,51 @@ export default class CreateVideo extends Component {
     })
   }, 300)
 
+  _renderGetBrightcove = () => {
+    const {contentId} = this.state
+    return <Tab.Pane>
+      <Form>
+        <Form.Input
+          placeholder='Insert brightcove Id here'
+          value={contentId}
+          onChange={e => this.setState({contentId: e.target.value})}
+        />
+        <Button primary size='tiny' content='Load content' onClick={this._handleGetVideo}/>
+      </Form>
+    </Tab.Pane>
+  }
+
+  _renderGetYoutube = () => {
+    const {contentId} = this.state
+    return <Tab.Pane>
+      <Form>
+        <Form.Input
+          placeholder='Insert Youtube Id here'
+          value={contentId}
+          onChange={e => this.setState({contentId: e.target.value})}
+        />
+        <Button primary size='tiny' content='Load content' onClick={() => this._handleGetVideo('youtube')}/>
+      </Form>
+    </Tab.Pane>
+  }
+
+  _renderGetVimeo = () => {
+    const {contentId} = this.state
+    return <Tab.Pane>
+      <Form>
+        <Form.Input
+          placeholder='Insert Vimeo Id here'
+          value={contentId}
+          onChange={e => this.setState({contentId: e.target.value})}
+        />
+        <Button primary size='tiny' content='Load content' onClick={() => this._handleGetVideo('vimeo')}/>
+      </Form>
+    </Tab.Pane>
+  }
+
   render() {
     ChangeTitle('Create Video')
-    const {contentId, seriesOptions, videoData, key} = this.state
+    const {seriesOptions, videoData, key, isLoadingVideo, showForm} = this.state
     const {
       title = '',
       genreIds = [],
@@ -162,20 +218,27 @@ export default class CreateVideo extends Component {
       <div key={key}>
         <h2>Video Detail</h2>
         <Divider />
-        <Segment.Group>
+        {!showForm && <Tab panes={[
+          {menuItem: 'Brighcove', render: () => this._renderGetBrightcove()},
+          {menuItem: 'Youtube', render: () => this._renderGetYoutube()},
+          {menuItem: 'Vimeo', render: () => this._renderGetVimeo()},
+        ]}/>}
+        {/* <Segment.Group>
           <Segment>
             <Form>
               <Form.Input
                 label='Brightcove ID'
-                placeholder='Fill brightcove Id here'
+                placeholder='Insert brightcove Id here'
                 value={contentId}
                 onChange={e => this.setState({contentId: e.target.value})}
               />
               <Button primary size='tiny' content='Load content' onClick={this._handleGetVideo}/>
             </Form>
           </Segment>
-        </Segment.Group>
-        {!isEmpty(videoData) &&
+        </Segment.Group> */}
+        {isLoadingVideo && <Segment><div><Loader active inline size='mini' /> &nbsp; Loading data</div></Segment>}
+        {!showForm && <div style={{textAlign: 'right', marginTop: 15}}><button className='btn--transparent'><a style={{fontStyle: 'italic', cursor: 'pointer'}} onClick={(e) => {e.preventDefault(); this.setState({showForm: true})}}>Skip insert video id ?</a></button></div>}
+        {showForm &&
         <div>
           <Segment.Group>
             <Segment>

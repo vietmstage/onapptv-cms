@@ -34,7 +34,7 @@ h1, h2, h3, h4, h5 {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 100;
+  z-index: 1902;
   padding-right: 10px;
 
   .ui.dropdown .menu > .item .text {
@@ -279,5 +279,20 @@ th.is-sorting {
   height: calc(100vh - 40px - 40px);
   .ui.inverted.dimmer {
     background-color: transparent
+  }
+}
+
+.btn--transparent {
+  background-color: transparent !important;
+  border: 0 !important;
+  cursor: pointer;
+  padding: 3px 7px;
+  &:hover {
+    a {
+      text-decoration: underline;
+    }
+  }
+  a {
+    font-style: italic;
   }
 }

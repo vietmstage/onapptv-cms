@@ -81,10 +81,11 @@ export default class VideoSearch extends Component {
         </div>
         <Divider/>
         {items.length === 0 && <div>Sorry. There's nothing to show.</div>}
-        <Table>
+        {!!items.length && <Table>
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell style={{width: 42}}></Table.HeaderCell>
+              <Table.HeaderCell style={{width: 90}}/>              
               <Table.HeaderCell>Title</Table.HeaderCell>
               <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Duration</Table.HeaderCell>
@@ -98,13 +99,22 @@ export default class VideoSearch extends Component {
                 onClick={() => this._handleSelect(item)}
               >
                 <Table.Cell><Checkbox checked={Object.keys(selected).indexOf(item._id) !== -1} /></Table.Cell>
+                <Table.Cell>
+                  <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
+                    {item.originalImages && !!item.originalImages.length && <img
+                      src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
+                      alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
+                      style={{width: 70, verticalAlign: 'top', objectFit: 'cover'}}
+                    />}
+                  </div>
+                </Table.Cell>
                 <Table.Cell>{item.title}</Table.Cell>
                 <Table.Cell>{item.shortDescription}</Table.Cell>
                 <Table.Cell>{item.durationInSeconds}</Table.Cell>
               </Table.Row>
             )}
           </Table.Body>
-        </Table>
+        </Table>}
         {/* Pagination here */}
       </div>
     )

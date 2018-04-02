@@ -29,15 +29,16 @@ const videoOutput = `
   genreIds
   producerIds
   directorIds
+  castIds
   tags
   feature
   allowedCountries
 `
-export const getVideos = (page = 1, perPage = 20) => {
+export const getVideos = (page = 1, perPage = 20, filter = {}) => {
   return client.query(`
-    query {
+    query ($filter: FilterFindManyvideotypeInput) {
       viewer {
-        data: videoPagination (page: ${page}, perPage: ${perPage}) {
+        data: videoPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
           count
           items {
             ${videoOutput}
@@ -45,7 +46,7 @@ export const getVideos = (page = 1, perPage = 20) => {
         }
       }
     }
-  `).then(result => {
+  `, {filter}).then(result => {
     if (result && !result.errors) {
       return {data: result.data.viewer.data}
     }
@@ -53,11 +54,14 @@ export const getVideos = (page = 1, perPage = 20) => {
   }).catch(error => console.error(error))
 }
 
-export const getVideoByContentId = (contentId) => {
+export const getVideoByContentId = (contentId, type = 'brightcove') => {
+  let func = 'brightcoveSearchVideo'
+  if (type === 'youtube') func = 'youtubeSearchVideo'
+  if (type === 'vimeo') func = 'vimeoSearchVideo'
   return client.query(`
     query ($contentId: String!) {
       viewer {
-        brightcoveSearchVideo(contentId: $contentId) {
+        ${func}(contentId: $contentId) {
           contentId
           durationInSeconds
           publishDate
@@ -77,7 +81,10 @@ export const getVideoByContentId = (contentId) => {
         }
       }
     }
-  `, {contentId}).then(data => data).catch(err => console.error(err))
+  `, {contentId}).then(result => {
+    if (result && !result.errors) return {data: result.data.viewer[func], videoOne: result.data.viewer.videoOne || null}
+    return result
+  }).catch(err => console.error(err))
 }
 
 export const createVideo = (data) => {
@@ -169,5 +176,22 @@ export const updateVideo = (data) => {
       return {data: result.data.admin.videoUpdateById}
     }
     return result
-  })
+  }).catch(err => console.error(err))
+}
+
+export const updateVideoMany = (data, filter) => {
+  return client.query(`
+    mutation ($data: UpdateManyvideotypeInput!, $filter: FilterUpdateManyvideotypeInput) {
+      admin {
+        videoUpdateMany (record: $data, filter: $filter) {
+          numAffected
+        }
+      }
+    }
+  `, {data, filter}).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.admin.videoUpdateMany}
+    }
+    return result
+  }).catch(err => console.error(err))
 }

@@ -1,6 +1,6 @@
 const menuData = [
   {
-    title: 'Video Manager',
+    title: 'Video',
     items: [
       {
         title: 'Video list',
@@ -14,13 +14,13 @@ const menuData = [
       },
       {
         title: 'Archived videos',
-        to: '/video/trash',
+        to: '/video/archived',
         icon: 'trash'
       }
     ]
   },
   {
-    title: 'Series Manager',
+    title: 'Series',
     items: [
       {
         title: 'Series list',
@@ -34,13 +34,13 @@ const menuData = [
       },
       {
         title: 'Archived Series',
-        to: '/series/trash',
+        to: '/series/archived',
         icon: 'trash'
       }
     ]
   },
   {
-    title: 'Channel Manager',
+    title: 'Channel',
     items: [
       {
         title: 'Channel list',
@@ -54,7 +54,7 @@ const menuData = [
       },
       {
         title: 'Archived channel',
-        to: '/channel/trash',
+        to: '/channel/archived',
         icon: 'trash'
       }
     ]

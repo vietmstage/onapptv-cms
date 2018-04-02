@@ -4,12 +4,13 @@ import { Segment, Button, Divider, Form, Modal, Icon, Table, Popup, Dimmer, Load
 import Description from '../../components/Description'
 import ThumbnailsList from '../../components/ThumbnailsList'
 import DropDown from '../../components/common/Dropdown'
-import { getChannelById, channelAddEPGs, updateChannel, addEPG } from '../../actions/channel'
+import { getChannelById, channelAddEPGs, updateChannel, addEPG, channelRemoveEPGs } from '../../actions/channel'
 import {toast} from 'react-toastify'
 import DateTime from 'react-datetime'
 import findIndex from 'lodash/findIndex'
 import debounce from 'lodash/debounce'
 import {videoSearch} from '../../actions/video'
+import isEmpty from 'lodash/isEmpty'
 export default class EditChannel extends Component {
   static propTypes = {
 
@@ -31,10 +32,11 @@ export default class EditChannel extends Component {
     if (channelId) {
       this.setState({loadingChannel: true})
       getChannelById(channelId).then(result => {
-        if (result && !result.errors) {
+        if (result && !result.errors && result.data) {
           let epgList = []
-          const {epgsData} = result.data
-          epgsData.map(epg => epgList.push({
+          const {epgsData, epgIds} = result.data
+          epgsData.map((epg, index) => epgList.push({
+            id: epgIds[index],
             videoId: epg.videoId,
             title: epg.videoData.title,
             startTime: epg.startTime,
@@ -127,10 +129,16 @@ export default class EditChannel extends Component {
       endTime
     }).then(result => {
       if (result && !result.errors) {
+        toast.success('Create Epg successfully.')
         const {recordId} = result.data
         let {videoData} = this.state
+        const {match: {params: {channelId}}} = this.props
+        if (channelId) {
+          this._handleChanelAddEPG(channelId, [recordId])
+        }
         videoData.epgIds.push(recordId)
         epgList.push({
+          id: recordId,
           videoId,
           startTime,
           endTime,
@@ -145,45 +153,58 @@ export default class EditChannel extends Component {
   }
 
   _handleRemveEPG = (index) => {
-    let {epgList, videoData} = this.state
-    epgList.splice(index, 1)
-    videoData.epgIds.splice(index, 1)
-    this.setState({epgList, videoData})
+    let {epgList} = this.state
+    const {match: {params: {channelId}}} = this.props
+    console.log(epgList[index])
+    channelRemoveEPGs(channelId, [epgList[index].id]).then(result => {
+      if (result && !result.errors) {
+        toast.success('Remove epg from channel successfully.')
+        epgList.splice(index, 1)
+        this.setState({epgList})
+      } else {
+        toast.error('Cannot remve epg')
+      }
+    })
+    // videoData.epgIds.splice(index, 1)
   }
 
-  // _handleChanelAddEPG = (channelId) => {
-  //   let data = []
-  //   const {epgList} = this.state
-  //   epgList.forEach(item => {
-  //     const {videoId, startTime, endTime} = item
-  //     data.push({videoId, startTime, endTime})
-  //   })
+  _handleChanelAddEPG = (channelId, recordIds) => {
+    console.log(recordIds)
+    // let data = []
+    // const {epgList} = this.state
+    // epgList.forEach(item => {
+    //   const {videoId, startTime, endTime} = item
+    //   data.push({videoId, startTime, endTime})
+    // })
 
-  //   channelAddEPGs(channelId, data).then(result => {
-  //     if(!(result.errors && result.errors.length)) {
-  //       toast.success('Create new channel successfully!')
-  //       this.props.history.push('/channel/list')
-  //       this.setState({
-  //         videoData: {},
-  //         key: new Date().getTime().toString(),
-  //         epgList: []
-  //       })
-  //     } else {
-  //       toast.error('Cannot add EPG list to channel')
-  //     }
-  //   })
-  // }
+    channelAddEPGs(channelId, recordIds).then(result => {
+      if(!(result.errors && result.errors.length)) {
+        toast.success('Add Epg to channel successfully!')
+        this.setState({
+          videoData: {},
+          key: new Date().getTime().toString(),
+          epgList: []
+        })
+      } else {
+        toast.error('Cannot add EPG list to channel')
+      }
+    })
+  }
 
   render() {
     const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel} = this.state
 
     if (loadingChannel) return <div className='div__loading-full'><Dimmer active inverted><Loader /></Dimmer></div>
 
+    if (!loadingChannel && isEmpty(videoData)) return <Segment><i style={{color: '#999'}}>Sorry. There's nothing to show.</i></Segment>
+
     const {
       title = '',
       shortDescription = '',
       longDescription = '',
-      originalImages = []
+      originalImages = [],
+      serviceId = '',
+      lcn = ''
     } = videoData
     return (
       <div>
@@ -207,8 +228,27 @@ export default class EditChannel extends Component {
                     onDataCallback={this._handleUpdateDescription}
                     data={{title, shortDescription, longDescription}}
                   />
+                  <Form.Group widths='equal'>
+                    <Form.Input
+                      label='Service Id'
+                      placeholder='Service Id'
+                      name='serviceId'
+                      value={serviceId}
+                      onChange={this._handleInputChange}
+                    />
+                    <Form.Input
+                      label='Logic Channel Number'
+                      placeholder='Logic Channel Number'
+                      name='lcn'
+                      value={lcn}
+                      onChange={this._handleInputChange}
+                    />
+                  </Form.Group>
                 </Form>
               </div>
+            </div>
+            <div style={{textAlign: 'right'}}>
+              <Button primary content='Update' onClick={this._handleUpdate}/>
             </div>
           </Segment>
         </Segment.Group>
@@ -300,9 +340,6 @@ export default class EditChannel extends Component {
             </Table>
           </Segment>}
         </Segment.Group>
-        <div style={{textAlign: 'right'}}>
-          <Button primary content='Update' onClick={this._handleUpdate}/>
-        </div>
       </div>
     )
   }

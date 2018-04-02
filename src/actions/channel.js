@@ -1,7 +1,8 @@
 import {client} from './graphql'
 const channelOuput = `
   _id
-  channelId
+  serviceId
+  lcn
   title
   longDescription
   shortDescription
@@ -27,11 +28,11 @@ const channelOuput = `
     }
   }
 `
-export const getChannel = (page = 1) => {
+export const getChannel = (page = 1, perPage = 20, filter = {}) => {
   return client.query(`
-    query {
+    query ($filter: FilterFindManychanneltypeInput) {
       viewer {
-        data: channelPagination (page: ${page}, perPage: 20) {
+        data: channelPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
           count
           items {
             ${channelOuput}
@@ -39,7 +40,7 @@ export const getChannel = (page = 1) => {
         }
       }
     }
-  `).then(data => {
+  `, {filter}).then(data => {
     return data
   }).catch(error => console.error(error))
 }
@@ -83,34 +84,34 @@ export const channelSearch = (text, limit = 10, skip = 0) => {
   }).catch(err => console.error(err))
 }
 
-export const channelAddEPGs = (channelId, records) => {
+export const channelAddEPGs = (channelId, recordIds) => {
   return client.query(`
-    mutation ($records: [EPGModelInput]) {
+    mutation ($recordIds: [String]) {
       admin {
         channelAddEPGs (
           _id: "${channelId}",
-          records: $records
+          recordIds: $recordIds
         ) {
-          channelId
+          _id
         }
       }
     }
-  `, {records}).then(data => data).catch(err => console.error(err))
+  `, {recordIds}).then(data => data).catch(err => console.error(err))
 }
 
-export const channelRemoveEPGs = (channelId, epgId) => {
+export const channelRemoveEPGs = (channelId, recordIds) => {
   return client.query(`
-    mutation {
+    mutation ($recordIds: [String]) {
       admin {
         channelRemoveEPGs (
           _id: "${channelId}",
-          epgId: "${epgId}"
+          recordIds: $recordIds
         ) {
-          channelId
+          _id
         }
       }
     }
-  `).then(data => data).catch(err => console.error(err))
+  `, {recordIds}).then(data => data).catch(err => console.error(err))
 }
 
 export const getChannelById = id => {
@@ -157,4 +158,21 @@ export const addEPG = data => {
     }
     return result
   }).catch(err => console.error(err))
-} 
+}
+
+export const updateChannelMany = (data, filter) => {
+  return client.query(`
+    mutation ($data: UpdateManychanneltypeInput!, $filter: FilterUpdateManychanneltypeInput) {
+      admin {
+        channelUpdateMany (record: $data, filter: $filter) {
+          numAffected
+        }
+      }
+    }
+  `, {data, filter}).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.admin.channelUpdateMany}
+    }
+    return result
+  }).catch(err => console.error(err))
+}

@@ -19,12 +19,24 @@ export default class Tags extends Component {
     this.setState({
       tags: [...(tags || [])]
     })
+    this._buildTagsOptionsData(this.props)
   }
 
   componentWillReceiveProps (nextProps) {
     if(JSON.stringify(this.props.tags) !== JSON.stringify(nextProps.tags) && JSON.stringify(nextProps.tags) !== JSON.stringify(this.state.tags)) {
+      this._buildTagsOptionsData(nextProps)
       this.setState({
         tags: [...(nextProps.tags || [])]
+      })
+    }
+  }
+
+  _buildTagsOptionsData(props) {
+    if (props.tags && props.tags.length && this.state.tagsOptions.length === 0) {
+      let options = []
+      props.tags.map(tag => options.push({text: tag, value: tag}))
+      this.setState({
+        tagsOptions: options
       })
     }
   }

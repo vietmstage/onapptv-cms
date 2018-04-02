@@ -1,4 +1,25 @@
 import {client} from './graphql'
+const episodesOutput = `
+  _id
+  contentId
+  durationInSeconds
+  publishDate
+  title
+  longDescription
+  shortDescription
+  feature
+  seriesId
+  seasonIndex
+  episodeIndex
+  type
+  impression
+  state
+  originalImages {
+    url
+    name
+    fileName
+  }
+`
 const seriesOutput = `
   _id
   contentId
@@ -18,12 +39,21 @@ const seriesOutput = `
       url
     }
   }
+  genreIds
+  producerIds
+  directorIds
+  castIds
+  tags
+  allowedCountries
+  episodes {
+    ${episodesOutput}
+  }
 `
-export const getSeries = (page = 1, perPage = 20) => {
+export const getSeries = (page = 1, perPage = 20, filter = {}) => {
   return client.query(`
-    query {
+    query ($filter: FilterFindManyseriestypeInput) {
       viewer {
-        data: seriesPagination (page: ${page}, perPage: ${perPage}) {
+        data: seriesPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
           count
           items {
             ${seriesOutput}
@@ -31,7 +61,7 @@ export const getSeries = (page = 1, perPage = 20) => {
         }
       }
     }
-  `).then(data => {
+  `, {filter}).then(data => {
     return data
   }).catch(error => console.error(error))
 }
@@ -75,18 +105,22 @@ export const seriesCreate = (data) => {
   `, {data}).then(data => data).catch(err => console.error(err))
 }
 
-export const seriesUpdate = (id, data) => {
+export const updateSeries = (data) => {
   return client.query(`
-    mutation ($id: MongoID, $data: UpdateManyseriestypeInput!) {
+    mutation ($data: UpdateByIdseriestypeInput!) {
       admin {
-        seriesUpdateMany(record: $data, filter: {
-          _id: $id
-        }) {
-          numAffected
+        seriesUpdateById(record: $data) {
+          recordId
+          record {
+            ${seriesOutput}
+          }
         }
       }
     }
-  `, {id, data}).then(result => result).catch(err => console.error(err))
+  `, {data}).then(result => {
+    if (result && !result.errors) return {data: result.data.admin.seriesUpdateById}
+    return result
+  }).catch(err => console.error(err))
 }
 
 export const getSeriesById = id => {
@@ -101,6 +135,23 @@ export const getSeriesById = id => {
   `).then(result => {
     if (result && !result.errors) {
       return {data: result.data.viewer.seriesById}
+    }
+    return result
+  }).catch(err => console.error(err))
+}
+
+export const updateSeriesMany = (data, filter) => {
+  return client.query(`
+    mutation ($data: UpdateManyseriestypeInput!, $filter: FilterUpdateManyseriestypeInput) {
+      admin {
+        seriesUpdateMany (record: $data, filter: $filter) {
+          numAffected
+        }
+      }
+    }
+  `, {data, filter}).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.admin.seriesUpdateMany}
     }
     return result
   }).catch(err => console.error(err))

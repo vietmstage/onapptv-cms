@@ -53,9 +53,10 @@ export default class CreateChannel extends Component {
     channelCreate(videoData).then(result => {
       if(!(result.errors && result.errors.length)) {
         if(epgList.length) {
-          this._handleUpdateChanelEPG(result.data.admin.channelCreate.recordId)
+          this._handleChanelAddEPG(result.data.admin.channelCreate.recordId)
         } else {
           toast.success('Create new channel successfully!')
+          this.props.history.push('/channel/list')          
           this.setState({
             videoData: {},
             key: new Date().getTime().toString()
@@ -91,67 +92,81 @@ export default class CreateChannel extends Component {
     })
   }, 500)
 
-  _handleEPGAdd = () => {
-    const {videoId, startTime, endTime, videoOptions, epgList} = this.state
-    const index = findIndex(videoOptions, {'value': videoId})
-    const title = videoOptions[index].text
-    addEPG({
-      videoId,
-      startTime,
-      endTime
-    }).then(result => {
-      if (result && !result.errors) {
-        const {recordId} = result.data
-        // let {videoData} = this.state
-        // videoData.epgIds.push(recordId)
-        epgList.push({
-          id: recordId,
-          videoId,
-          startTime,
-          endTime,
-          title
-        })
-        this.setState({
-          epgList
-        }, this._handleModalClose)
-      }
-    })
-    // epgList.push({
-    //   videoId,
-    //   startTime,
-    //   endTime,
-    //   title
-    // })
-    // this.setState({
-    //   epgList
-    // }, this._handleModalClose)
-  }
+  // _handleEPGAdd = () => {
+  //   const {videoId, startTime, endTime, videoOptions, epgList} = this.state
+  //   const index = findIndex(videoOptions, {'value': videoId})
+  //   const title = videoOptions[index].text
+  //   addEPG({
+  //     videoId,
+  //     startTime,
+  //     endTime
+  //   }).then(result => {
+  //     if (result && !result.errors) {
+  //       const {recordId} = result.data
+  //       // let {videoData} = this.state
+  //       // videoData.epgIds.push(recordId)
+  //       epgList.push({
+  //         id: recordId,
+  //         videoId,
+  //         startTime,
+  //         endTime,
+  //         title
+  //       })
+  //       this.setState({
+  //         epgList
+  //       }, this._handleModalClose)
+  //     }
+  //   })
+  //   // epgList.push({
+  //   //   videoId,
+  //   //   startTime,
+  //   //   endTime,
+  //   //   title
+  //   // })
+  //   // this.setState({
+  //   //   epgList
+  //   // }, this._handleModalClose)
+  // }
 
-  _handleRemveEPG = (index) => {
-    let {epgList, videoData} = this.state
-    epgList.splice(index, 1)
-    videoData.epgIds.splice(index, 1)
-    this.setState({epgList, videoData})
-  }
+  // _handleRemveEPG = (index) => {
+  //   let {epgList, videoData} = this.state
+  //   epgList.splice(index, 1)
+  //   videoData.epgIds.splice(index, 1)
+  //   this.setState({epgList, videoData})
+  // }
 
-  _handleUpdateChanelEPG = (channelId) => {
-    let data = {_id: channelId, epgIds: []}
-    const {epgList} = this.state
-    epgList.forEach(item => data.epgIds.push(item.id))
+  // _handleChanelAddEPG = (channelId) => {
+  //   // let data = {_id: channelId, epgIds: []}
+  //   let epgIds = []
+  //   const {epgList} = this.state
+  //   epgList.forEach(item => epgIds.push(item.id))
 
-    updateChannel(data).then(result => {
-      if(result && !result.errors) {
-        toast.success('Update channel successfully!')
-        this.setState({
-          videoData: {},
-          key: new Date().getTime().toString(),
-          epgList: []
-        })
-      } else {
-        toast.error('Update failed')
-      }
-    })
-  }
+  //   // updateChannel(data).then(result => {
+  //   //   if(result && !result.errors) {
+  //   //     toast.success('Update channel successfully!')
+  //   //     this.setState({
+  //   //       videoData: {},
+  //   //       key: new Date().getTime().toString(),
+  //   //       epgList: []
+  //   //     })
+  //   //   } else {
+  //   //     toast.error('Update failed')
+  //   //   }
+  //   // })
+  //   channelAddEPGs(channelId, epgIds).then(result => {
+  //     if(result && !result.errors) {
+  //       this.props.history.push('/channel/list')
+  //       toast.success('Create new channel successfully!')
+  //       this.setState({
+  //         videoData: {},
+  //         key: new Date().getTime().toString(),
+  //         epgList: []
+  //       })
+  //     } else {
+  //       toast.error('Create new channel failed')
+  //     }
+  //   })
+  // }
 
   render() {
     ChangeTitle('Create Channel')
@@ -159,7 +174,9 @@ export default class CreateChannel extends Component {
     const {
       title = '',
       shortDescription = '',
-      longDescription = ''
+      longDescription = '',
+      serviceId = '',
+      lcn = ''
     } = videoData
     return (
       <div key={key}>
@@ -183,12 +200,28 @@ export default class CreateChannel extends Component {
                     onDataCallback={this._handleUpdateDescription}
                     data={{title, shortDescription, longDescription}}
                   />
+                  <Form.Group widths='equal'>
+                    <Form.Input
+                      label='Service Id'
+                      placeholder='Service Id'
+                      name='serviceId'
+                      value={serviceId}
+                      onChange={this._handleInputChange}
+                    />
+                    <Form.Input
+                      label='Logic Channel Number'
+                      placeholder='Logic Channel Number'
+                      name='lcn'
+                      value={lcn}
+                      onChange={this._handleInputChange}
+                    />
+                  </Form.Group>
                 </Form>
               </div>
             </div>
           </Segment>
         </Segment.Group>
-        <Segment.Group>
+        {/* <Segment.Group>
           <Segment>
             <div className='clearfix'>
               <h4 className='left'>EPG list</h4>
@@ -275,7 +308,7 @@ export default class CreateChannel extends Component {
               </Table.Body>
             </Table>
           </Segment>}
-        </Segment.Group>
+        </Segment.Group> */}
         <div style={{textAlign: 'right'}}>
           <Button primary content='Create' onClick={this._handleCreate}/>
         </div>
