@@ -96,7 +96,7 @@ export default class Header extends Component {
       <div id='header'>
         <div className='left logo'>
           <img alt='logo' src={Logo} height={20} />
-          <span>Userkit Video</span>
+          <span>ContentKit</span>
         </div>
         <div className='right'>
           <Dropdown
