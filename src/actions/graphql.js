@@ -53,10 +53,10 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 // addMockFunctionsToSchema({ schema: chirpSchema });
 
 export const graphqlClient = new ApolloClient({
-  link: new HttpLink({ uri: 'http://13.250.57.10:3000/graphql' }),
+  link: new HttpLink({ uri: 'http://contentkit-prod.ap-southeast-1.elasticbeanstalk.com/graphql' }),
   cache: new InMemoryCache({addTypename: false})
 });
 
 export const client = require('graphql-client')({
-  url: 'http://13.250.57.10:3000/graphql'
+  url: 'http://contentkit-prod.ap-southeast-1.elasticbeanstalk.com/graphql'
 })

@@ -45,7 +45,7 @@ export default class CreateVideo extends Component {
         return
       }
       const {data} = result
-      let videoData = {...data}
+      let videoData = {...data, contentId}
       delete videoData['__typename']
 
       this.setState({
