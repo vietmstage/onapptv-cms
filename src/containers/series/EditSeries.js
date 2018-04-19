@@ -122,6 +122,7 @@ export default class EditSeries extends Component {
         if(Object.keys(episodes).length) this._handleUpdateEpToSeries(result.data.recordId)
         else {
           toast.success('Update series success!')
+          this.props.history.push('/series/list')
           this.setState({
             videoData: {},
             key: new Date().getTime().toString(),
@@ -138,6 +139,7 @@ export default class EditSeries extends Component {
     updateSeriesId(seriesId, Object.keys(episodes)).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Update series success!')
+        this.props.history.push('/series/list')        
         this.setState({
           videoData: {},
           key: new Date().getTime().toString(),

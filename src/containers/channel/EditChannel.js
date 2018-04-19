@@ -180,11 +180,11 @@ export default class EditChannel extends Component {
     channelAddEPGs(channelId, recordIds).then(result => {
       if(!(result.errors && result.errors.length)) {
         toast.success('Add Epg to channel successfully!')
-        this.setState({
-          videoData: {},
-          key: new Date().getTime().toString(),
-          epgList: []
-        })
+        // this.setState({
+        //   videoData: {},
+        //   key: new Date().getTime().toString(),
+        //   epgList: []
+        // })
       } else {
         toast.error('Cannot add EPG list to channel')
       }

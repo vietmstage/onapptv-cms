@@ -3,7 +3,7 @@ import menuData from './menuData'
 import MenuGroup from './MenuGroup'
 import { Route, NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
-import mobileMenuData from './mobileMenuData';
+// import mobileMenuData from './mobileMenuData';
 import {Divider} from 'semantic-ui-react'
 const SideMenu = () => <Route render={({history}) => (
   <div id='side-menu'>
@@ -15,13 +15,13 @@ const SideMenu = () => <Route render={({history}) => (
 
     {menuData.map((data, index) => <MenuGroup data={data} key={index} history={history} />)}
     <Divider />
-    <div className='menu-group'>
+    {/* <div className='menu-group'>
       <div className='menu' style={{height: 40}}>
         <NavLink exact to='/mobile'> <Icon name='dashboard' /> Mobile Dashboard</NavLink>
       </div>
-    </div>
+    </div> */}
 
-    {mobileMenuData.map((data, index) => <MenuGroup data={data} key={index} history={history} />)}
+    {/* {mobileMenuData.map((data, index) => <MenuGroup data={data} key={index} history={history} />)} */}
     
   </div>)} />
 

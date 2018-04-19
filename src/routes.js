@@ -18,6 +18,8 @@ const NewsList = asyncComponent(() => import('./containers/news/NewsList').then(
 const CreateNews = asyncComponent(() => import('./containers/news/CreateNews').then(module => module.default))
 const AdsList = asyncComponent(() => import('./containers/ads/AdsList').then(module => module.default))
 const CreateAds = asyncComponent(() => import('./containers/ads/CreateAds').then(module => module.default))
+const CreateMeta = asyncComponent(() => import('./containers/meta/CreateMeta').then(module =>module.default))
+const MetaList = asyncComponent(() => import('./containers/meta/MetaList').then(module =>module.default))
 export default class Routes extends Component {
   render () {
     return (
@@ -39,6 +41,8 @@ export default class Routes extends Component {
         <Route path='/news/add' component={CreateNews} />
         <Route path='/ads/list/:page?' component={AdsList} />
         <Route path='/ads/add' component={CreateAds} />
+        <Route path='/meta/add' component={CreateMeta} />
+        <Route path='/meta/list/:page?' component={MetaList} />
       </div>
     )
   }

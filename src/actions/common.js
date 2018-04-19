@@ -1,5 +1,5 @@
-import {graphqlClient, client} from './graphql'
-import gql from 'graphql-tag';
+import {client} from './graphql'
+
 export const getGenres = () => {
   return client.query(`
     query {

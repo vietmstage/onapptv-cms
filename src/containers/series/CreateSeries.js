@@ -126,6 +126,7 @@ export default class CreateSeries extends Component {
         if(Object.keys(episodes).length) this._handleUpdate(data.data.admin.seriesCreate.recordId)
         else {
           toast.success('Create new series success!')
+          this.props.history.push('/series/list')
           this.setState({
             videoData: {},
             key: new Date().getTime().toString(),
@@ -142,6 +143,7 @@ export default class CreateSeries extends Component {
     updateSeriesId(seriesId, Object.keys(episodes)).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Create new series success!')
+        this.props.history.push('/series/list')
         this.setState({
           videoData: {},
           key: new Date().getTime().toString(),

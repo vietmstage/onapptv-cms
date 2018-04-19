@@ -65,6 +65,7 @@ export default class CreateVideo extends Component {
     createVideo(videoData).then(data => {
       if(!(data.errors && data.errors.length)) {
         toast.success('Create video successfully!')
+        this.props.history.push('/video/list')
         this.setState({
           contentId: '',
           videoData: {},

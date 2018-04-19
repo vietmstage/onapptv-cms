@@ -19,7 +19,7 @@ export default class People extends Component {
     producerIds: [],
     modalOpen: false,
     name: '',
-    role: [],
+    roles: [],
     roleOptions: [
       {text: 'Director', value: 'Director'},
       {text: 'Castor', value: 'Castor'},
@@ -83,8 +83,8 @@ export default class People extends Component {
   }
 
   _handlePeopleCreate = () => {
-    const {name, role} = this.state
-    createPeople({name, role}).then(data => {
+    const {name, roles} = this.state
+    createPeople({name, roles}).then(data => {
       if(!data) {
         toast.error('Cannot create new role!!!')
         return
@@ -106,13 +106,13 @@ export default class People extends Component {
           data.recordId
         ],
         name: '',
-        role: [],
+        roles: [],
         modalOpen: false
       }, this._callback)
     })
   }
 
-  _handleRoleChange = (e, {value}) => this.setState({role: value})
+  _handleRoleChange = (e, {value}) => this.setState({roles: value})
 
   _callback = () => {
     const {directorIds, castIds, producerIds} = this.state
@@ -134,7 +134,7 @@ export default class People extends Component {
       producerIds = [],
       modalOpen,
       name,
-      role,
+      roles,
       roleOptions
     } = this.state
     return (
@@ -195,7 +195,7 @@ export default class People extends Component {
                 <DropDown
                   options={roleOptions}
                   search selection fluid multiple
-                  value={role}
+                  value={roles}
                   onChange={this._handleRoleChange}
                 />
               </Form.Field>

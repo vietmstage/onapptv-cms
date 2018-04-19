@@ -58,6 +58,61 @@ const menuData = [
         icon: 'trash'
       }
     ]
+  },
+  {
+    title: 'News',
+    items: [
+      {
+        title: 'News list',
+        to: '/news/list',
+        icon: 'users'
+      },
+      {
+        title: 'Add news',
+        to: '/news/add',
+        icon: 'plus'
+      },
+      {
+        title: 'Archived news',
+        to: '/news/trash',
+        icon: 'trash'
+      }
+    ]
+  },
+  {
+    title: 'Ads',
+    items: [
+      {
+        title: 'Ads list',
+        to: '/ads/list',
+        icon: 'list'
+      },
+      {
+        title: 'Add new Ads',
+        to: '/ads/add',
+        icon: 'plus'
+      },
+      {
+        title: 'Archived Ads',
+        to: '/ads/trash',
+        icon: 'trash'
+      }
+    ]
+  },
+  {
+    title: 'Meta',
+    items: [
+      {
+        title: 'Meta List',
+        to: '/meta/list',
+        icon: 'list'
+      },
+      {
+        title: 'Add Meta',
+        to: '/meta/add',
+        icon: 'code'
+      }
+    ]
   }
 ]
 
