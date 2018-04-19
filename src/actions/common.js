@@ -58,7 +58,7 @@ export const getPeople = (role) => {
 
 export const createPeople = record => {
   return client.query(`
-    mutation ($record: CreateOnePeopleModelInput!) {
+    mutation ($record: CreateOnepeopletypeInput!) {
       admin {
         peopleCreate (record: $record) {
           recordId
