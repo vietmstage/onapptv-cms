@@ -44,7 +44,7 @@ export default class Description extends Component {
       <React.Fragment>
         <Form.Input
           label='Title*'
-          placeholder='Video Title'
+          placeholder='Title'
           value={title}
           name='title'
           onChange={this._handleInputChange}
@@ -57,7 +57,7 @@ export default class Description extends Component {
           onChange={this._handleInputChange}
         />
         <Form.TextArea
-          placeholder='Describe about video detail'
+          placeholder='Describe'
           label='Description'
           value={longDescription || ''}
           name='longDescription'

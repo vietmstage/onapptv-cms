@@ -3,7 +3,7 @@ import {client} from './graphql'
 import fetch from 'isomorphic-fetch'
 
 export const getFileSign = (payload) => {
-  return client.query(`
+  return client().query(`
     mutation ($fileName: String, $version: Float, $contentType: String) {
       admin {
         fileSignedUrl(fileName: $fileName, version: $version, contentType: $contentType) {
@@ -30,7 +30,7 @@ export const uploadFile = ({url, file}) => {
 }
 
 export const fileCreate = record => {
-  return client.query(`
+  return client().query(`
     mutation ($record: CreateOneconfigtypeInput!) {
       admin {
         fileCreate (record: $record) {
@@ -45,7 +45,7 @@ export const fileCreate = record => {
 }
 
 export const getMetaList = ({page = 1, perPage = 20}) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         filePagination (page: ${page}, perPage: ${perPage}) {

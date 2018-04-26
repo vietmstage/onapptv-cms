@@ -1,17 +1,22 @@
 import React, { Component } from 'react';
 import {Provider} from 'react-redux'
-import configureStore from './store/configureStore'
+import store from './store/configureStore'
 import Root from './containers/Root'
-// import createHistory from 'history/createBrowserHistory'
+import {ToastContainer} from 'react-toastify'
+import createHistory from 'history/createBrowserHistory'
+import initSAC from 'super-admin-components'
+initSAC('production')
+const history = createHistory({basename: '#'})
 
 class App extends Component {
   render() {
-    const store = configureStore()
-    // const history = createHistory()
 
     return (
       <Provider store={store}>
-        <Root />
+        <React.Fragment>
+          <ToastContainer hideProgressBar position='top-right' style={{top: 50}} />      
+          <Root history={history}/>
+        </React.Fragment>
       </Provider>
     );
   }

@@ -40,6 +40,21 @@ const menuData = [
     ]
   },
   {
+    title: 'Epg',
+    items: [
+      {
+        title: 'Epg List',
+        to: '/epg/list',
+        icon: 'list'
+      },
+      {
+        title: 'Epg archived',
+        to: '/epg/archived',
+        icon: 'trash'
+      }
+    ]
+  },
+  {
     title: 'Channel',
     items: [
       {

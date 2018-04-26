@@ -10,6 +10,7 @@ import debounce from 'lodash/debounce'
 import { videoSearch } from '../../actions/video'
 import DateTime from 'react-datetime'
 import findIndex from 'lodash/findIndex'
+import MetaData from '../../components/MetaData'
 export default class CreateChannel extends Component {
   state = {
     videoData: {},
@@ -168,6 +169,12 @@ export default class CreateChannel extends Component {
   //   })
   // }
 
+  _handleUpdateMeta = (metadata) => {
+    let {videoData} = this.state
+    videoData.metadata = metadata
+    this.setState({videoData})
+  }
+
   render() {
     ChangeTitle('Create Channel')
     const {videoData, key, modalOpen, videoOptions, videoId, startTime, endTime, epgList} = this.state
@@ -219,6 +226,16 @@ export default class CreateChannel extends Component {
                 </Form>
               </div>
             </div>
+          </Segment>
+        </Segment.Group>
+        <Segment.Group>
+          <Segment>
+            <h4>Meta Data</h4>
+          </Segment>
+          <Segment>
+            <MetaData
+              onUpdateMeta={this._handleUpdateMeta}
+            />
           </Segment>
         </Segment.Group>
         {/* <Segment.Group>

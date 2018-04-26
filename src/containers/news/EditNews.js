@@ -1,19 +1,35 @@
 import React, { Component } from 'react'
-import {Segment, Button, Divider, Form} from 'semantic-ui-react'
+import {Segment, Button, Divider, Form, Dimmer, Loader} from 'semantic-ui-react'
 import ThumbnailsList from '../../components/ThumbnailsList'
 import Description from '../../components/Description'
-import { newsCreate } from '../../actions/news';
 import { toast } from 'react-toastify';
 import ChangeTitle from '../../libs/ChangeTitle';
-
-export default class CreateNews extends Component {
+import {getNewsById, updateNews} from '../../actions/news'
+import isEmpty from 'lodash/isEmpty'
+export default class EditNews extends Component {
   static propTypes = {
 
   }
 
   state = {
-    createData: {},
-    key: ''
+    newsData: {},
+    key: '',
+    loadingNews: false
+  }
+
+  componentDidMount () {
+    const {match: {params: {newsId}}} = this.props
+    if (newsId) {
+      this.setState({loadingNews: true})
+      getNewsById(newsId).then(result => {
+        this.setState({loadingNews: false})
+        if (result && !result.errors && result.data) {
+          this.setState({newsData: result.data})
+        } else {
+          toast.error('Can not get news detail.')
+        }
+      })
+    }
   }
 
   _handleAddNewItem = (targetOptions, value) => {
@@ -24,18 +40,18 @@ export default class CreateNews extends Component {
   _handleArrayChange = (e, { name, value }) => this.setState({ [name]: value })
 
   _handleInputChange = (e, {name, value}) => {
-    let {createData} = this.state
-    createData[name] = value
+    let {newsData} = this.state
+    newsData[name] = value
     this.setState({
       [name]: value,
-      createData
+      newsData
     })
   }
 
   _handleUpdateoriginalImages = (originalImages) => {
     this.setState({
-      createData: {
-        ...this.state.createData,
+      newsData: {
+        ...this.state.newsData,
         originalImages
       }
     })
@@ -43,40 +59,49 @@ export default class CreateNews extends Component {
 
   _handleUpdateDescription = (data) => {
     this.setState({
-      createData: {
-        ...this.state.createData,
+      newsData: {
+        ...this.state.newsData,
         ...data
       }
     })
   }
   
-  _handleCreate = () => {
-    const {createData} = this.state
-    newsCreate({
-      ...createData,
-      originalImages: createData.originalImages[0]
+  _handleUpdate = () => {
+    const { newsData } = this.state
+    const { match: { params : {newsId: _id} }, history } = this.props
+    updateNews({
+      record: newsData,
+      filter: {
+        _id
+      }
     }).then(data => {
       if(!(data.errors && data.errors.length)) {
-        toast.success('Create new news successfully!')
-        this.props.history('/news/list')
+        toast.success('Update news successfully!')
+        history.push('/news/list')
         this.setState({
-          createData: {},
+          newsData: {},
           key: new Date().getTime().toString()
         })
       } else {
-        toast.error('Create faield!!')
+        toast.error('Update news faield!!')
       }
     })
   }
 
   render() {
     ChangeTitle('Create News')
-    const {createData, key} = this.state
+
+    const {newsData, key, loadingNews} = this.state
+    if (loadingNews) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
+
+    if (!loadingNews && isEmpty(newsData)) return <Segment><i style={{color: '#999'}}>Sorry. There's nothing to show.</i></Segment>
+    
     const {
       title = '',
       shortDescription = '',
-      longDescription = ''
-    } = createData
+      longDescription = '',
+      originalImages = []
+    } = newsData
     return (
       <div key={key}>
         <h2>News Detail</h2>
@@ -86,7 +111,7 @@ export default class CreateNews extends Component {
             <h4>Thumbnails News</h4>
           </Segment>
           <Segment>
-            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} multiple={false}/>
+            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} multiple={false} data={originalImages} isEdit/>
           </Segment>
         </Segment.Group>
         <Segment.Group>
@@ -106,7 +131,7 @@ export default class CreateNews extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Create' onClick={this._handleCreate}/>
+              <Button primary content='Update' onClick={this._handleUpdate}/>
             </div>
           </Segment>
         </Segment.Group>

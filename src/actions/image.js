@@ -1,22 +1,34 @@
-import {graphqlClient} from './graphql'
+import {graphqlClient, client} from './graphql'
 import gql from 'graphql-tag';
 import fetch from 'isomorphic-fetch'
 export const getImageSign = (imageName, type) => {
-  return graphqlClient.mutate({
-    mutation: gql`
-      mutation ($imageName: String, $type: String) {
-        admin {
-          imageSignedUrl(fileName: $imageName, contentType: $type) {
-            url
-          }
+  return client().query(`
+    mutation ($imageName: String, $type: String) {
+      admin {
+        imageSignedUrl(fileName: $imageName, contentType: $type) {
+          url
         }
       }
-    `,
-    variables: {
-      imageName,
-      type
     }
-  }).then(data => data).catch(err => console.error(err))
+  `, {imageName,type}).then(result => {
+    if (result && !result.errors) return {data: result.data.admin.imageSignedUrl}
+    return result
+  }).catch(err => console.error(err))
+  // return graphqlClient.mutate({
+  //   mutation: gql`
+  //     mutation ($imageName: String, $type: String) {
+  //       admin {
+  //         imageSignedUrl(fileName: $imageName, contentType: $type) {
+  //           url
+  //         }
+  //       }
+  //     }
+  //   `,
+  //   variables: {
+  //     imageName,
+  //     type
+  //   }
+  // }).then(data => data).catch(err => console.error(err))
 }
 
 export const uploadImage = (url, file) => {

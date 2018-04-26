@@ -1,24 +1,26 @@
 import {client} from './graphql'
-
+const newsOutput = `
+  _id
+  title
+  longDescription
+  shortDescription
+  url
+  originalImages {
+    url
+    name
+  }
+  url
+  updatedAt
+  createdAt
+`
 export const getNews = (page = 1, perPage = 20) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         data: newsPagination (page: ${page}, perPage: ${perPage}) {
           count
           items {
-            _id
-            title
-            longDescription
-            shortDescription
-            url
-            originalImages {
-              url
-              name
-            }
-            url
-            updatedAt
-            createdAt
+            ${newsOutput}
           }
         }
       }
@@ -27,7 +29,7 @@ export const getNews = (page = 1, perPage = 20) => {
 }
 
 export const newsCreate = (data) => {
-  return client.query(`
+  return client().query(`
     mutation ($data: CreateOnenewstypeInput!) {
       admin {
         newsCreate (record: $data) {
@@ -39,7 +41,7 @@ export const newsCreate = (data) => {
 }
 
 export const newsSearch = (text, limit = 10, skip = 0) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         newsSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
@@ -47,18 +49,7 @@ export const newsSearch = (text, limit = 10, skip = 0) => {
           items: hits {
             _id
             data: fromMongo {
-              _id
-              title
-              longDescription
-              shortDescription
-              url
-              originalImages {
-                url
-                name
-              }
-              url
-              updatedAt
-              createdAt
+              ${newsOutput}
             }
           }
         }
@@ -74,4 +65,37 @@ export const newsSearch = (text, limit = 10, skip = 0) => {
     })
     return newData
   }).catch(err => console.error(err))
+}
+
+export const getNewsById = id => {
+  return client().query(`
+    query {
+      viewer {
+        newsOne (filter: { _id: "${id}" }) {
+          ${newsOutput}
+        }
+      }
+    }
+  `).then(result => {
+    if (result && !result.errors) {
+      return {data: result.data.viewer.newsOne}
+    }
+    return result
+  })
+}
+
+export const updateNews = ({record, filter}) => {
+  delete record._id
+  return client().query(`
+    mutation ($record: UpdateOnenewstypeInput!, $filter: FilterUpdateOnenewstypeInput) {
+      admin {
+        newsUpdateOne (record: $record, filter: $filter) {
+          recordId
+        }
+      }
+    }
+  `, {record, filter}).then(result => {
+    if (result && !result.errors) return {data: result.data.admin.newsUpdateOne}
+    return result
+  })
 }

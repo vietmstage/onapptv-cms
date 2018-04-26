@@ -15,6 +15,7 @@ import People from '../../components/selector/People'
 import ChangeTitle from '../../libs/ChangeTitle'
 import debounce from 'lodash/debounce'
 import { seriesSearch } from '../../actions/series'
+import MetaData from '../../components/MetaData'
 export default class CreateVideo extends Component {
   state = {
     contentId: '',
@@ -23,7 +24,7 @@ export default class CreateVideo extends Component {
     videoData: {},
     key: '',
     isLoadingVideo: false,
-    showForm: false
+    showForm: true
   }
 
   _handleGetVideo = (type = 'brightcove') => {
@@ -195,6 +196,12 @@ export default class CreateVideo extends Component {
     </Tab.Pane>
   }
 
+  _handleUpdateMeta = (metadata) => {
+    let {videoData} = this.state
+    videoData.metadata = metadata
+    this.setState({videoData})
+  }
+
   render() {
     ChangeTitle('Create Video')
     const {seriesOptions, videoData, key, isLoadingVideo, showForm} = this.state
@@ -251,7 +258,7 @@ export default class CreateVideo extends Component {
             </Segment>
           </Segment.Group>
           <Segment.Group>
-            <Segment><h4>Brightcove video detail</h4></Segment>
+            <Segment><h4>Video detail</h4></Segment>
             <Segment>
               <div className='video-detail'>
                 <div className="video__info">
@@ -260,24 +267,6 @@ export default class CreateVideo extends Component {
                       onDataCallback={this._handleUpdateDescription}
                       data={{title, shortDescription, longDescription}}
                     />
-                    {/* <Form.Group widths='equal'>
-                      <Form.Field>
-                        <label>Video source:</label>
-                        <DropDown
-                          selection
-                          placeholder='Select video source'
-                          options={[
-                            {key: 0, value: 'youtube', text: 'Youtube'},
-                            {key: 1, value: 'brightcove', text: 'Brightcove'},
-                            {key: 2, value: 'vimeo', text: 'Vimeo'}
-                          ]}
-                        />
-                      </Form.Field>
-                      <Form.Input
-                        label='Values'
-                        placeholder='Values'
-                      />
-                    </Form.Group> */}
                     <Form.Group widths='equal'>
                       <Genres onDataCallback={this._handleUpdateGenres} genreIds={genreIds}/>
                       
@@ -349,15 +338,24 @@ export default class CreateVideo extends Component {
                         onChange={(e, {name, value}) => this._handleInputChange(e, {name, value: parseFloat(value, 10)})}
                       />
                     </div>}
-                    <Divider />
-                    <div>
-                      <Button primary content='Create' onClick={this._handleVideoCreate}/>
-                    </div>
                   </Form>
                 </div>
               </div>
             </Segment>
           </Segment.Group>
+          <Segment.Group>
+            <Segment>
+              <h4>Meta Data</h4>
+            </Segment>
+            <Segment>
+              <MetaData
+                onUpdateMeta={this._handleUpdateMeta}
+              />
+            </Segment>
+          </Segment.Group>
+          <div style={{textAlign: 'right'}}>
+            <Button primary content='Create' onClick={this._handleVideoCreate}/>
+          </div>
         </div>
         }
       </div>

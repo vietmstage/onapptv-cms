@@ -1,24 +1,16 @@
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
-import { Image, Dropdown, Button, Icon, Label } from 'semantic-ui-react'
+import { Dropdown } from 'semantic-ui-react'
 import Logo from '../assests/mstage-logo.png'
-import Avatar from '../assests/chien.png'
+// import Avatar from '../assests/chien.png'
+import {toast} from 'react-toastify'
 import {Link} from 'react-router-dom'
+import { Components, Actions } from 'super-admin-components'
+import findIndex from 'lodash/findIndex'
 
-const ListItem = [
-  {
-    title: 'Chien\'s test',
-    description: 'Accounts sign up last 30 days, with sign up device is equal to iOS'
-  },
-  {
-    title: 'Most video viewer',
-    description: 'Profiles view more than 300 videos last 90 days'
-  },
-  {
-    title: 'Most pay',
-    description: 'Accounts who pay us more than $500'
-  }
-]
+
+const { UserInfo } = Components
+const {projects: projectActions} = Actions
 
 export default class Header extends Component {
   static propTypes = {
@@ -27,66 +19,71 @@ export default class Header extends Component {
     onSelectApp: PropTypes.func
   }
 
-  _handleDropdown = (e, {value}) => {
-    if (value === 'sign-out') {
-      window.localStorage.isLogin = false
-      this.props.onLogout()
-    }
+  state = {
+    projectOptions: [],
+    selectedProject: '',
+    projects: [],
+    loadingProjects: false,
+    userInfo: {}
   }
 
-  _createDopdownListItem = () => {
-    return ListItem.map((item, index) => {
-      return {
-        key: index,
-        value: index,
-        text: item.title,
-        content: <div>
-          <strong>
-            {item.title}
-          </strong>
-          <br />
-          <span style={{color: 'gray', fontSize: 12}}>
-            {item.description}
-          </span>
-        </div>
+  _handleCallback = (data) => {
+    const {onLogout, dispatch} = this.props
+    if (!data || data.errors) {
+      toast.error('Cannot get user info. Please login again!')
+      window.localStorage.removeItem('isLogin')
+      window.localStorage.removeItem('superadmin_user_token')
+      onLogout && onLogout()
+      return
+    }
+    this.setState({loadingProjects: true, userInfo: data.data})
+    projectActions.getProjects({type: 'CONTENTKIT'}).then(result => {
+      this.setState({loadingProjects: false})
+      if (!result || result.errors) return
+      const {data} = result.data
+      let selectedProject = ''
+      let projectOptions = []
+      if (data.length) {
+        if (window.localStorage.selectedProject && findIndex(data, {id: window.localStorage.selectedProject}) === -1) {
+          window.localStorage.removeItem('selectedProject')
+        }
+        selectedProject = window.localStorage.selectedProject ? window.localStorage.selectedProject : data[0].id
+        this.props.onSelectApp(data[findIndex(data, {id: selectedProject})])
+      } else {
+        this.props.onSelectApp({})
       }
+      dispatch && dispatch({
+        type: 'GET_PROJECT_LIST',
+        result: data
+      })
+      data.map(project => projectOptions.push({value: project.id, text: project.name}))
+      this.setState({selectedProject, projects: data})
     })
   }
 
-  render () {
-    const curHr = new Date().getHours()
-    const trigger = (
-      <span>
-        <Image avatar src={Avatar} style={{border: '2px solid #fff', marginTop: 6}} />
-      </span>
-    )
+  _handleLogout = () => {
+    window.localStorage.removeItem('isLogin')
+    window.localStorage.removeItem('superadmin_user_token')
+    this.props.onLogout()
+  }
 
-    const options = [
-      {
-        key: 'user',
-        value: 'user',
-        text: 'Account',
-        content: <div>
-          <Link to='/account' style={{color: '#444', display: 'block'}}>
-            <Icon name='user' /> Account</Link>
-        </div>
-      },
-      {
-        key: 'settings',
-        value: 'settings',
-        text: 'Settings',
-        content: <div>
-          <Link to='/settings' style={{color: '#444', display: 'block'}}>
-            <Icon name='settings' /> Settings</Link>
-        </div>
-      },
-      {
-        key: 'sign-out',
-        value: 'sign-out',
-        text: 'Sign Out',
-        content: <div><Icon name='sign out' /> Logout</div>
-      }
-    ]
+  _selectApp = (e, {name, value}) => {
+    this.setState({
+      [name]: value
+    })
+    window.localStorage.selectedProject = value
+    const {projects} = this.state
+    const index = findIndex(projects, {id: value})
+    this.props.onSelectApp(projects[index])
+  }
+
+  render () {
+    const {project} = this.props
+    const {selectedProject, userInfo} = this.state
+    const curHr = new Date().getHours()
+    let projectOptions = []
+    const projectList = project.get('list').toJS() || []
+    projectList.map(project => projectOptions.push({value: project.id, text: project.name}))
 
     let greeting = 'Good evening'
     if (curHr < 12) greeting = 'Good morning'
@@ -95,48 +92,41 @@ export default class Header extends Component {
     return (
       <div id='header'>
         <div className='left logo'>
-          <img alt='logo' src={Logo} height={20} />
-          <span>Userkit Video</span>
+          <Link to='/'>
+            <img alt='logo' src={Logo} height={20} />
+            <span>Userkit Video</span>
+          </Link>
+        </div>
+        <div className='left selected-app'>
+          Selected project:
+          &nbsp;
+          <Dropdown
+            name='selectedProject'
+            selectOnNavigation={false}
+            style={{fontWeight: 'bold'}}
+            value={selectedProject}
+            options={projectOptions}
+            selectOnBlur={false}
+            onChange={this._selectApp}
+          />
         </div>
         <div className='right'>
           <Dropdown
             selectOnBlur={false}
             selectOnNavigation={false}
             className='user-menu'
-            trigger={trigger}
-            options={options}
+            trigger={<UserInfo onCallback={this._handleCallback} />}
             pointing='top right'
             icon={null}
             value={null}
-            onChange={this._handleDropdown}
-            header={<div className='header'>{greeting}, <b>Super admin</b></div>}
-          />
-
-          <Dropdown
-            selectOnNavigation={false}
-            selectOnBlur={false}
-            className='notification'
-            trigger={<span>
-              <Button
-                icon='bell'
-                size='large'
-                color='green'
-                style={{marginTop: 8, marginRight: 15, padding: 5}}
-              />
-              <Label
-                circular
-                size='mini'
-                color='red'
-                floating
-                content={3}
-              />
-            </span>}
-            options={this._createDopdownListItem()}
-            pointing='top right'
-            icon={null}
-            value={null}
-            onChange={this._handleDropdown}
-          />
+          >
+            <Dropdown.Menu>
+              <Dropdown.Header><div className='header'>{greeting}, <b>Super admin</b></div></Dropdown.Header>
+              <Dropdown.Item icon='user' text='Account' as={Link} to={`/account/${userInfo.id}`} />
+              <Dropdown.Item icon='settings' text='Settings' />
+              <Dropdown.Item icon='sign out' text='Signout' onClick={this._handleLogout} />
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
     )

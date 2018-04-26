@@ -14,6 +14,8 @@ import DateTime from 'react-datetime'
 import { toast } from 'react-toastify';
 import { getSeriesById, seriesSearch } from '../../actions/series'
 import debounce from 'lodash/debounce'
+import isEmpty from 'lodash/isEmpty'
+import MetaData from '../../components/MetaData'
 export default class EditVideo extends Component {
   static propTypes = {
 
@@ -31,7 +33,7 @@ export default class EditVideo extends Component {
     if (videoId) {
       this.setState({loadingVideo: true})
       getVideoById(videoId).then(result => {
-        if (result && !result.errors) {
+        if (result && !result.errors && result.data) {
           if (result.data.seriesId) {
             getSeriesById(result.data.seriesId).then(seriesResult => {
               if (seriesResult && !seriesResult.errors) {
@@ -150,10 +152,18 @@ export default class EditVideo extends Component {
     })
   }, 300)
 
+  _handleUpdateMeta = (metadata) => {
+    let {videoData} = this.state
+    videoData.metadata = metadata
+    this.setState({videoData})
+  }
+
   render() {
     const {videoData, seriesOptions, loadingVideo, searchingSeries} = this.state
 
     if (loadingVideo) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
+
+    if (!loadingVideo && isEmpty(videoData)) return <Segment><i style={{color: '#999'}}>Sorry. There's nothing to show.</i></Segment>
 
     const {
       title = '',
@@ -171,7 +181,8 @@ export default class EditVideo extends Component {
       seasonIndex = 0,
       episodeIndex = 0,
       seriesId = '',
-      originalImages = []
+      originalImages = [],
+      metadata = {}
     } = videoData
     return (
       <div>
@@ -288,15 +299,25 @@ export default class EditVideo extends Component {
                         onChange={(e, {name, value}) => this._handleInputChange(e, {name, value: parseFloat(value, 10)})}
                       />
                     </div>}
-                    <Divider />
-                    <div>
-                      <Button primary content='Update' onClick={this._handleVideoCreate}/>
-                    </div>
                   </Form>
                 </div>
               </div>
             </Segment>
           </Segment.Group>
+          <Segment.Group>
+            <Segment>
+              <h4>Meta Data</h4>
+            </Segment>
+            <Segment>
+              <MetaData
+                onUpdateMeta={this._handleUpdateMeta}
+                metaData={metadata}
+              />
+            </Segment>
+          </Segment.Group>
+          <div style={{textAlign: 'right'}}>
+            <Button primary content='Update' onClick={this._handleVideoCreate}/>
+          </div>
         </div>
         }
       </div>

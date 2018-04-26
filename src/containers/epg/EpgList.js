@@ -3,10 +3,10 @@ import React, { Component } from 'react'
 import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Dimmer, Confirm } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import ChangeTitle from '../../libs/ChangeTitle';
-import { getMetaList } from '../../actions/meta';
+import { getEpgList } from '../../actions/epg';
 import Pagination from '../../components/common/Pagination'
 
-export default class MetaList extends Component {
+export default class EpgList extends Component {
   // static propTypes = {
 
   // }
@@ -29,19 +29,19 @@ export default class MetaList extends Component {
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetMetaList)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetEpgList)
     } else {
-      this._handleGetMetaList()
+      this._handleGetEpgList()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetMetaList)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetEpgList)
     }
   }
 
-  _handleGetMetaList = () => {
+  _handleGetEpgList = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
@@ -60,7 +60,7 @@ export default class MetaList extends Component {
       // })
       // return
     }
-    getMetaList({page: activePage, perPage: pageSize}).then(result => {
+    getEpgList({page: activePage, perPage: pageSize}).then(result => {
       this.setState({isLoading: false, isSearching: false})
       if (result && !result.errors) {
         const {items, count} = result.data
@@ -82,13 +82,13 @@ export default class MetaList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetMetaList)
+        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetEpgList)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetMetaList)
+    this.setState({pageSize: data.value}, this._handleGetEpgList)
   }
 
   _handleSelect = (id) => {
@@ -124,7 +124,7 @@ export default class MetaList extends Component {
     //   if (result && !result.errors) {
     //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
     //     toast.success(`Video [${archivedItem.title}] archived successfully.`)
-    //     this._handleGetMetaList()
+    //     this._handleGetEpgList()
     //   } else {
     //     toast.error(`Video [${archivedItem.title}] archived failed.`)
     //   }
@@ -141,7 +141,7 @@ export default class MetaList extends Component {
     //   if (result && !result.errors) {
     //     toast.success(`[${selected.length}] selected videos archived successfully.`)
     //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-    //     this._handleGetMetaList()
+    //     this._handleGetEpgList()
     //   } else {
     //     toast.error(`Archived videos failed.`)
     //   }
@@ -149,7 +149,7 @@ export default class MetaList extends Component {
   }
 
   render() {
-    ChangeTitle('Meta List')
+    ChangeTitle('Epg List')
     const {history} = this.props
     const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showBulkConfirm, showConfirm} = this.state
 
@@ -157,7 +157,7 @@ export default class MetaList extends Component {
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Meta List</h2>
+            <h2>Epg List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -185,16 +185,16 @@ export default class MetaList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Archive selected metas'
+                  content='Archive selected epgs'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
-                <Button
+                {/* <Button
                   size='tiny'
                   primary
-                  content='Add meta'
+                  content='Add epg'
                   as={Link}
-                  to='/meta/add' />
+                  to='/meta/add' /> */}
               </div>
             </div>
           </Segment>
@@ -219,11 +219,8 @@ export default class MetaList extends Component {
                   />
                 </Table.HeaderCell>
                 <Table.HeaderCell style={{width: 40}}>#</Table.HeaderCell>
-                <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell style={{width: 70}}>Version</Table.HeaderCell>
-                <Table.HeaderCell>Url</Table.HeaderCell>
-                <Table.HeaderCell>CreatedAt</Table.HeaderCell>
-                <Table.HeaderCell>UpdatedAt</Table.HeaderCell>
+                <Table.HeaderCell>Video title</Table.HeaderCell>
+                <Table.HeaderCell>Channel title</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 100}}>Action</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -237,11 +234,8 @@ export default class MetaList extends Component {
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                     <Table.Cell>{index + 1}</Table.Cell>
-                    <Table.Cell>{item.name}</Table.Cell>
-                    <Table.Cell>{item.version}</Table.Cell>
-                    <Table.Cell><a href={item.url} target='_blank'>{item.url}</a></Table.Cell>
-                    <Table.Cell>{item.createdAt}</Table.Cell>
-                    <Table.Cell>{item.updatedAt}</Table.Cell>
+                    <Table.Cell>{item.videoData.title}</Table.Cell>
+                    <Table.Cell>{item.channelData.title}</Table.Cell>
                     <Table.Cell>
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
@@ -256,7 +250,7 @@ export default class MetaList extends Component {
                         /> */}
                         <Popup
                           trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                          content='Archive this meta.'
+                          content='Archive this epg.'
                           inverted
                         />
                       </div>}
@@ -272,10 +266,10 @@ export default class MetaList extends Component {
             total={total}
             history={history}
             onchangeSize={this._changePageSize}
-            url='/meta/list' />
+            url='/epg/list' />
           <Confirm
             open={showConfirm}
-            content={`Are you sure to archive meta [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to archive epg [${this.state.archivedItem.title || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
@@ -283,7 +277,7 @@ export default class MetaList extends Component {
           />
           <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to archive all these ${selected.length} selected metas?`}
+            content={`Are you sure to archive all these ${selected.length} selected epgs?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}

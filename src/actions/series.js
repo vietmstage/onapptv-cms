@@ -50,7 +50,7 @@ const seriesOutput = `
   }
 `
 export const getSeries = (page = 1, perPage = 20, filter = {}) => {
-  return client.query(`
+  return client().query(`
     query ($filter: FilterFindManyseriestypeInput) {
       viewer {
         data: seriesPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
@@ -67,7 +67,7 @@ export const getSeries = (page = 1, perPage = 20, filter = {}) => {
 }
 
 export const seriesSearch = (text, limit = 30, skip = 0) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         seriesSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
@@ -94,7 +94,7 @@ export const seriesSearch = (text, limit = 30, skip = 0) => {
 }
 
 export const seriesCreate = (data) => {
-  return client.query(`
+  return client().query(`
     mutation ($data: CreateOneseriestypeInput!) {
       admin {
         seriesCreate(record: $data) {
@@ -106,52 +106,60 @@ export const seriesCreate = (data) => {
 }
 
 export const updateSeries = (data) => {
-  return client.query(`
-    mutation ($data: UpdateByIdseriestypeInput!) {
+  const _id = data._id
+  delete data._id
+  return client().query(`
+    mutation ($data: UpdateOneseriestypeInput!) {
       admin {
-        seriesUpdateById(record: $data) {
-          recordId
-          record {
-            ${seriesOutput}
+        seriesUpdateOne(
+          record: $data,
+          filter: {
+            _id: "${_id}"
           }
+        ) {
+          recordId
         }
       }
     }
   `, {data}).then(result => {
-    if (result && !result.errors) return {data: result.data.admin.seriesUpdateById}
+    if (result && !result.errors) return {data: result.data.admin.seriesUpdateOne}
     return result
   }).catch(err => console.error(err))
 }
 
 export const getSeriesById = id => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
-        seriesById (_id: "${id}") {
+        seriesOne (
+          filter: {
+            _id: "${id}"
+          }
+        ) {
           ${seriesOutput}
         }
       }
     }
   `).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.viewer.seriesById}
+      return {data: result.data.viewer.seriesOne}
     }
     return result
   }).catch(err => console.error(err))
 }
 
 export const updateSeriesMany = (data, filter) => {
-  return client.query(`
-    mutation ($data: UpdateManyseriestypeInput!, $filter: FilterUpdateManyseriestypeInput) {
+  return client().query(`
+    mutation ($data: UpdateOneseriestypeInput!, $filter: FilterUpdateOneseriestypeInput) {
       admin {
-        seriesUpdateMany (record: $data, filter: $filter) {
-          numAffected
+        seriesUpdateOne (record: $data, filter: $filter) {
+          recordId
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.seriesUpdateMany}
+      return {data: result.data.admin.seriesUpdateOne}
     }
     return result
   }).catch(err => console.error(err))

@@ -33,9 +33,10 @@ const videoOutput = `
   tags
   feature
   allowedCountries
+  metadata
 `
 export const getVideos = (page = 1, perPage = 20, filter = {}) => {
-  return client.query(`
+  return client().query(`
     query ($filter: FilterFindManyvideotypeInput) {
       viewer {
         data: videoPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
@@ -58,7 +59,7 @@ export const getVideoByContentId = (contentId, type = 'brightcove') => {
   let func = 'brightcoveSearchVideo'
   if (type === 'youtube') func = 'youtubeSearchVideo'
   if (type === 'vimeo') func = 'vimeoSearchVideo'
-  return client.query(`
+  return client().query(`
     query ($contentId: String!) {
       viewer {
         ${func}(contentId: $contentId) {
@@ -88,7 +89,7 @@ export const getVideoByContentId = (contentId, type = 'brightcove') => {
 }
 
 export const createVideo = (data) => {
-  return client.query(`
+  return client().query(`
     mutation ($data: CreateOnevideotypeInput!) {
       admin {
         videoCreate(record: $data) {
@@ -100,7 +101,7 @@ export const createVideo = (data) => {
 }
 
 export const videoSearch = (text, limit = 10, skip = 0) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         videoSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
@@ -127,10 +128,10 @@ export const videoSearch = (text, limit = 10, skip = 0) => {
 }
 
 export const updateSeriesId = (seriesId, ids) => {
-  return client.query(`
+  return client().query(`
     mutation ($seriesId: MongoID, $ids: [MongoID]){
       admin {
-        videoUpdateMany (
+        videoUpdateOne (
           record: {
             seriesId: $seriesId
           },
@@ -138,7 +139,7 @@ export const updateSeriesId = (seriesId, ids) => {
             _ids: $ids
           }
         ) {
-          numAffected
+          recordId
         }
       }
     }
@@ -146,51 +147,62 @@ export const updateSeriesId = (seriesId, ids) => {
 }
 
 export const getVideoById = (id) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
-        videoById(_id: "${id}") {
+        videoOne(
+          filter: {
+            _id: "${id}"
+          }
+        ) {
           ${videoOutput}
         }
       }
     }
   `).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.viewer.videoById}
+      return {data: result.data.viewer.videoOne || {}}
     }
     return result
   }).catch(err => console.error(err))
 }
 
 export const updateVideo = (data) => {
-  return client.query(`
-    mutation ($data: UpdateByIdvideotypeInput!){
+  const _id = data._id
+  delete data._id
+  return client().query(`
+    mutation ($data: UpdateOnevideotypeInput!){
       admin {
-        videoUpdateById (record: $data) {
+        videoUpdateOne (
+          record: $data,
+          filter: {
+            _id: "${_id}"
+          }
+        ) {
           recordId
         }
       }
     }
   `, {data}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.videoUpdateById}
+      return {data: result.data.admin.videoUpdateOne || {}}
     }
     return result
   }).catch(err => console.error(err))
 }
 
 export const updateVideoMany = (data, filter) => {
-  return client.query(`
-    mutation ($data: UpdateManyvideotypeInput!, $filter: FilterUpdateManyvideotypeInput) {
+  return client().query(`
+    mutation ($data: UpdateOnevideotypeInput!, $filter: FilterUpdateOnevideotypeInput) {
       admin {
-        videoUpdateMany (record: $data, filter: $filter) {
-          numAffected
+        videoUpdateOne (record: $data, filter: $filter) {
+          recordId
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.videoUpdateMany}
+      return {data: result.data.admin.videoUpdateOne || {}}
     }
     return result
   }).catch(err => console.error(err))

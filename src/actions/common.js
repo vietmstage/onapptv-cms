@@ -1,7 +1,7 @@
 import {client} from './graphql'
 
 export const getGenres = () => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         genresOptions: genreMany {
@@ -17,7 +17,7 @@ export const createGenre = (name) => {
   const variables = {
     name
   }
-  return client.query(`
+  return client().query(`
     mutation ($name: String) {
       admin {
         genreCreate (record: {name: $name}) {
@@ -33,7 +33,7 @@ export const createGenre = (name) => {
 
 
 export const getPeople = (role) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         peoplePagination(
@@ -57,7 +57,7 @@ export const getPeople = (role) => {
 }
 
 export const createPeople = record => {
-  return client.query(`
+  return client().query(`
     mutation ($record: CreateOnepeopletypeInput!) {
       admin {
         peopleCreate (record: $record) {

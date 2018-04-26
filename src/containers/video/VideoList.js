@@ -117,8 +117,9 @@ export default class VideoList extends Component {
       {state: 'archived'},
       {_ids: isArchivingIds}
     ).then(result => {
+      this.setState({isArchivingIds: [], archivedItem: {}})
       if (result && !result.errors) {
-        this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
+        this.setState({selected: []})
         toast.success(`Video [${archivedItem.title}] archived successfully.`)
         this._handleGetVideos()
       } else {

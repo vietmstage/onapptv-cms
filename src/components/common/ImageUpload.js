@@ -36,8 +36,11 @@ export default class ImageUpload extends Component {
       const type = file.type.split('/')[1]
       reader.onload = () => {
         p = p.then(() => getImageSign(imageName, type).then(result => {
-          if (!result) return
-          const {url} = result.data.admin.imageSignedUrl
+          if (!result || result.errors) {
+            onUploadFailed && onUploadFailed()
+            return
+          }
+          const {url} = result.data
           return Promise.resolve(uploadImage(url, file).then(resp => {
             if(resp.ok) {
               const tmp = url.split('?')[0].split('/')

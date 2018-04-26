@@ -11,6 +11,7 @@ import findIndex from 'lodash/findIndex'
 import debounce from 'lodash/debounce'
 import {videoSearch} from '../../actions/video'
 import isEmpty from 'lodash/isEmpty'
+import MetaData from '../../components/MetaData'
 export default class EditChannel extends Component {
   static propTypes = {
 
@@ -46,7 +47,7 @@ export default class EditChannel extends Component {
           this.setState({videoData: result.data, loadingChannel: false, epgList})
         } else {
           this.setState({loadingChannel: false})
-          toast.error('Can not get video detail.')
+          toast.error('Can not get channel detail.')
         }
       })
     }
@@ -191,6 +192,12 @@ export default class EditChannel extends Component {
     })
   }
 
+  _handleUpdateMeta = (metadata) => {
+    let {videoData} = this.state
+    videoData.metadata = metadata
+    this.setState({videoData})
+  }
+
   render() {
     const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel} = this.state
 
@@ -204,7 +211,8 @@ export default class EditChannel extends Component {
       longDescription = '',
       originalImages = [],
       serviceId = '',
-      lcn = ''
+      lcn = '',
+      metadata = {}
     } = videoData
     return (
       <div>
@@ -247,6 +255,17 @@ export default class EditChannel extends Component {
                 </Form>
               </div>
             </div>
+          </Segment>
+        </Segment.Group>
+        <Segment.Group>
+          <Segment>
+            <h4>Meta Data</h4>
+          </Segment>
+          <Segment>
+            <MetaData
+              onUpdateMeta={this._handleUpdateMeta}
+              metaData={metadata}
+            />
             <div style={{textAlign: 'right'}}>
               <Button primary content='Update' onClick={this._handleUpdate}/>
             </div>

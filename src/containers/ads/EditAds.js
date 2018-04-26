@@ -1,15 +1,34 @@
 import React, { Component } from 'react'
-import {Segment, Button, Divider, Form} from 'semantic-ui-react'
+import {Segment, Button, Divider, Form, Dimmer, Loader} from 'semantic-ui-react'
 import ThumbnailsList from '../../components/ThumbnailsList'
 import Description from '../../components/Description'
-import { adsCreate } from '../../actions/ads';
+import { updateAds, getAdsById } from '../../actions/ads';
 import { toast } from 'react-toastify';
 import ChangeTitle from '../../libs/ChangeTitle';
+import isEmpty from 'lodash/isEmpty'
+export default class EditAds extends Component {
+  static propTypes = {
 
-export default class CreateAds extends Component {
+  }
+
   state = {
-    createData: {},
+    adsData: {},
     key: ''
+  }
+
+  componentDidMount () {
+    const {match: {params: {adsId}}} = this.props
+    if (adsId) {
+      this.setState({loadingAds: true})
+      getAdsById(adsId).then(result => {
+        this.setState({loadingAds: false})
+        if (result && !result.errors && result.data) {
+          this.setState({adsData: result.data})
+        } else {
+          toast.error('Can not get news detail.')
+        }
+      })
+    }
   }
 
   _handleAddNewItem = (targetOptions, value) => {
@@ -20,18 +39,18 @@ export default class CreateAds extends Component {
   _handleArrayChange = (e, { name, value }) => this.setState({ [name]: value })
 
   _handleInputChange = (e, {name, value}) => {
-    let {createData} = this.state
-    createData[name] = value
+    let {adsData} = this.state
+    adsData[name] = value
     this.setState({
       [name]: value,
-      createData
+      adsData
     })
   }
 
   _handleUpdateoriginalImages = (originalImages) => {
     this.setState({
-      createData: {
-        ...this.state.createData,
+      adsData: {
+        ...this.state.adsData,
         originalImages
       }
     })
@@ -49,34 +68,41 @@ export default class CreateAds extends Component {
   //   })
   // }
   
-  _handleCreate = () => {
-    let {createData} = this.state
-    // createData = {
-    //   ...createData,
-    //   deal: createData.title,
-    // }
-    // delete createData.title
-    adsCreate(createData).then(data => {
+  _handleUpdate = () => {
+    let {adsData} = this.state
+    const { match: { params : {adsId: _id} }, history } = this.props
+    updateAds({
+      record: adsData,
+      filter: {
+        _id
+      }
+    }).then(data => {
       if(!(data.errors && data.errors.length)) {
-        toast.success('Create new Ads successfully!')
-        this.props.history.push('/ads/list')
+        toast.success('Update Ads successfully!')
+        history.push('/ads/list')
         this.setState({
-          createData: {},
+          adsData: {},
           key: new Date().getTime().toString()
         })
       } else {
-        toast.error('Create faield!!')
+        toast.error('Update Ads faield!!')
       }
     })
   }
 
   render() {
-    ChangeTitle('Create Ads')
-    const {createData, key} = this.state
+    ChangeTitle('Edit Ads')
+    const {adsData, key, loadingAds} = this.state
+
+    if (loadingAds) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
+
+    if (!loadingAds && isEmpty(adsData)) return <Segment><i style={{color: '#999'}}>Sorry. There's nothing to show.</i></Segment>
+
     const {
       deal = '',
+      originalImages = [],
       url = ''
-    } = createData
+    } = adsData
     return (
       <div key={key}>
         <h2>Ads Detail</h2>
@@ -86,7 +112,7 @@ export default class CreateAds extends Component {
             <h4>Thumbnails Ads</h4>
           </Segment>
           <Segment>
-            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} multiple={false} />
+            <ThumbnailsList onDataCallback={this._handleUpdateoriginalImages} multiple={false} data={originalImages} isEdit/>
           </Segment>
         </Segment.Group>
         <Segment.Group>
@@ -117,7 +143,7 @@ export default class CreateAds extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Create' onClick={this._handleCreate}/>
+              <Button primary content='Update' onClick={this._handleUpdate}/>
             </div>
           </Segment>
         </Segment.Group>

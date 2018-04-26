@@ -27,9 +27,10 @@ const channelOuput = `
       title
     }
   }
+  metadata
 `
 export const getChannel = (page = 1, perPage = 20, filter = {}) => {
-  return client.query(`
+  return client().query(`
     query ($filter: FilterFindManychanneltypeInput) {
       viewer {
         data: channelPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
@@ -46,7 +47,7 @@ export const getChannel = (page = 1, perPage = 20, filter = {}) => {
 }
 
 export const channelCreate = (data) => {
-  return client.query(`
+  return client().query(`
     mutation ($data: CreateOnechanneltypeInput!) {
       admin {
         channelCreate(record: $data) {
@@ -58,7 +59,7 @@ export const channelCreate = (data) => {
 }
 
 export const channelSearch = (text, limit = 10, skip = 0) => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
         channelSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
@@ -85,7 +86,7 @@ export const channelSearch = (text, limit = 10, skip = 0) => {
 }
 
 export const channelAddEPGs = (channelId, recordIds) => {
-  return client.query(`
+  return client().query(`
     mutation ($recordIds: [String]) {
       admin {
         channelAddEPGs (
@@ -100,7 +101,7 @@ export const channelAddEPGs = (channelId, recordIds) => {
 }
 
 export const channelRemoveEPGs = (channelId, recordIds) => {
-  return client.query(`
+  return client().query(`
     mutation ($recordIds: [String]) {
       admin {
         channelRemoveEPGs (
@@ -115,36 +116,43 @@ export const channelRemoveEPGs = (channelId, recordIds) => {
 }
 
 export const getChannelById = id => {
-  return client.query(`
+  return client().query(`
     query {
       viewer {
-        channelById (_id: "${id}") {
+        channelOne (filter: { _id: "${id}" }) {
           ${channelOuput}
         }
       }
     }
   `).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.viewer.channelById}
+      return {data: result.data.viewer.channelOne}
     }
     return result
   })
 }
 
 export const updateChannel = data => {
-  return client.query(`
-    mutation ($data: UpdateByIdchanneltypeInput!) {
+  const _id = data._id
+  delete data._id
+  return client().query(`
+    mutation ($data: UpdateOnechanneltypeInput!) {
       admin {
-        channelUpdateById (record: $data) {
+        channelUpdateOne (
+          record: $data,
+          filter: {
+            _id: "${_id}"
+          }
+        ) {
           recordId
         }
       }
     }
-  `, {data})
+  `, {data}).catch(err => console.error(err))
 }
 
 export const addEPG = data => {
-  return client.query(`
+  return client().query(`
     mutation ($data: CreateOneepgTypeInput!){
       admin {
         epgCreate(record: $data) {
@@ -161,17 +169,17 @@ export const addEPG = data => {
 }
 
 export const updateChannelMany = (data, filter) => {
-  return client.query(`
-    mutation ($data: UpdateManychanneltypeInput!, $filter: FilterUpdateManychanneltypeInput) {
+  return client().query(`
+    mutation ($data: UpdateOnechanneltypeInput!, $filter: FilterUpdateOnechanneltypeInput) {
       admin {
-        channelUpdateMany (record: $data, filter: $filter) {
-          numAffected
+        channelUpdateOne (record: $data, filter: $filter) {
+          recordId
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.channelUpdateMany}
+      return {data: result.data.admin.channelUpdateOne}
     }
     return result
   }).catch(err => console.error(err))
