@@ -172,7 +172,7 @@ export default class MetaList extends Component {
                     {key: 2, value: 'type', text: 'Type'},
                   ]}
                 /> */}
-                <Input
+                {/* <Input
                   icon='search'
                   loading={isSearching}
                   style={{width: 250}}
@@ -180,7 +180,7 @@ export default class MetaList extends Component {
                   onKeyDown={this._handleEnter}
                   onBlur={this._handleSearch}
                   onChange={(e, {value}) => this.setState({searchString: value})}
-                  placeholder='Enter search string...' />
+                  placeholder='Enter search string...' /> */}
               </div>
               <div>
                 {items.length > 0 && <Button

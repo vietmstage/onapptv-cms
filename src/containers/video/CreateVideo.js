@@ -3,7 +3,6 @@ import {Segment, Form, Button, Divider, Loader, Tab} from 'semantic-ui-react'
 import DropDown from '../../components/common/Dropdown'
 import { getVideoByContentId, createVideo } from '../../actions/video'
 import DateTime from 'react-datetime'
-import isEmpty from 'lodash/isEmpty'
 import { toast } from 'react-toastify';
 import moment from 'moment'
 import ThumbnailsList from '../../components/ThumbnailsList'
@@ -24,7 +23,7 @@ export default class CreateVideo extends Component {
     videoData: {},
     key: '',
     isLoadingVideo: false,
-    showForm: true
+    showForm: false
   }
 
   _handleGetVideo = (type = 'brightcove') => {

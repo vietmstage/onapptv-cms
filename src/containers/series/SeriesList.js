@@ -43,7 +43,7 @@ export default class SeriesList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      seriesSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      seriesSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({isLoading: false, isSearching: false})
         if(!data) {
           toast.error('Cannot search series!')

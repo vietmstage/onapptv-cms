@@ -36,13 +36,13 @@ export default class AdsList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      adsSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      adsSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({
           isSearching: false,
           isLoading: false
         })
         if(!data || data.errors) {
-          toast.error('Cannot search channel!')
+          toast.error('Cannot search ads!')
           return
         }
         const {items, count} = data

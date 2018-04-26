@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import {Form, Button, Label} from 'semantic-ui-react'
+import {Form, Button, Label, Divider} from 'semantic-ui-react'
 import {toast} from 'react-toastify'
 export default class MetaData extends Component {
   static propTypes = {
@@ -67,6 +67,7 @@ export default class MetaData extends Component {
               onMetaRemove={() => this._handleMetaRemove(key)}
             />
           </div>)}
+          {!!Object.keys(metaData).length && <Divider />}
           <div>
             <Form.Group widths='equal' style={{alignItems: 'flex-end'}}>
               <Form.Input

@@ -37,13 +37,13 @@ export default class NewsList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      newsSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      newsSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({
           isSearching: false,
           isLoading: false
         })
         if(!data) {
-          toast.error('Cannot search channel!')
+          toast.error('Cannot search news!')
           return
         }
         const {items, count} = data

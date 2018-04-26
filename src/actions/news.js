@@ -40,11 +40,20 @@ export const newsCreate = (data) => {
   `, {data}).then(data => data).catch(err => console.error(err))
 }
 
-export const newsSearch = (text, limit = 10, skip = 0) => {
+export const newsSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
   return client().query(`
     query {
       viewer {
-        newsSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
+        newsSearch(
+          query: {
+            query_string: {
+              query: "${text}",
+              default_operator: ${operator}
+            }
+          },
+          limit: ${limit},
+          skip: ${skip}
+        ) {
           count
           items: hits {
             _id

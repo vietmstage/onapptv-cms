@@ -49,7 +49,7 @@ export default class ChannelList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if(confirmedSearchString.length !== 0) {
-      channelSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      channelSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         if(!data) {
           toast.error('Cannot search channel!')
           return

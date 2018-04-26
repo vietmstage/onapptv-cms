@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom'
 import ChangeTitle from '../../libs/ChangeTitle';
 import { getEpgList } from '../../actions/epg';
 import Pagination from '../../components/common/Pagination'
-
+import {epgSearch, epgUpdate} from '../../actions/epg'
+import {toast} from 'react-toastify'
 export default class EpgList extends Component {
   // static propTypes = {
 
@@ -45,20 +46,20 @@ export default class EpgList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      // videoSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
-      //   this.setState({isLoading: false, isSearching: false})
-      //   if(!data) {
-      //     toast.error('Cannot search channel!')
-      //     return
-      //   }
-      //   const {items, count} = data
-      //   this.setState({
-      //     items,
-      //     total: count,
-      //     selected: []
-      //   })
-      // })
-      // return
+      epgSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+        this.setState({isLoading: false, isSearching: false})
+        if(!data) {
+          toast.error('Cannot search channel!')
+          return
+        }
+        const {items, count} = data
+        this.setState({
+          items,
+          total: count,
+          selected: []
+        })
+      })
+      return
     }
     getEpgList({page: activePage, perPage: pageSize}).then(result => {
       this.setState({isLoading: false, isSearching: false})
@@ -114,38 +115,40 @@ export default class EpgList extends Component {
   }
 
   _handleArchive = () => {
-    // const {archivedItem, isArchivingIds} = this.state
-    // isArchivingIds.push(archivedItem._id)
-    // this.setState({showConfirm: false, isArchivingIds})
-    // updateVideoMany(
-    //   {state: 'archived'},
-    //   {_ids: isArchivingIds}
-    // ).then(result => {
-    //   if (result && !result.errors) {
-    //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-    //     toast.success(`Video [${archivedItem.title}] archived successfully.`)
-    //     this._handleGetEpgList()
-    //   } else {
-    //     toast.error(`Video [${archivedItem.title}] archived failed.`)
-    //   }
-    // })
+    const {archivedItem, isArchivingIds} = this.state
+    isArchivingIds.push(archivedItem._id)
+    this.setState({showConfirm: false, isArchivingIds})
+    epgUpdate({
+      record: {state: 'archived'},
+      filter: {_ids: isArchivingIds}
+    }).then(result => {
+      this.setState({isArchivingIds: [], archivedItem: {}})
+      if (result && !result.errors) {
+        this.setState({selected: []})
+        toast.success(`Video [${archivedItem.title}] archived successfully.`)
+        this._handleGetEpgList()
+      } else {
+        toast.error(`Video [${archivedItem.title}] archived failed.`)
+      }
+    })
   }
 
   _handleBulkArchive = () => {
-    // const {selected} = this.state
-    // this.setState({isArchivingIds: selected, showBulkConfirm: false})
-    // updateVideoMany(
-    //   {state: 'archived'},
-    //   {_ids: selected}
-    // ).then(result => {
-    //   if (result && !result.errors) {
-    //     toast.success(`[${selected.length}] selected videos archived successfully.`)
-    //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-    //     this._handleGetEpgList()
-    //   } else {
-    //     toast.error(`Archived videos failed.`)
-    //   }
-    // })
+    const {selected} = this.state
+    this.setState({isArchivingIds: selected, showBulkConfirm: false})
+    epgUpdate({
+      record: {state: 'archived'},
+      filter: {_ids: selected}
+    }).then(result => {
+      this.setState({isArchivingIds: [], archivedItem: {}})      
+      if (result && !result.errors) {
+        toast.success(`[${selected.length}] selected videos archived successfully.`)
+        this.setState({selected: []})
+        this._handleGetEpgList()
+      } else {
+        toast.error(`Archived videos failed.`)
+      }
+    })
   }
 
   render() {
@@ -172,7 +175,7 @@ export default class EpgList extends Component {
                     {key: 2, value: 'type', text: 'Type'},
                   ]}
                 /> */}
-                <Input
+                {/* <Input
                   icon='search'
                   loading={isSearching}
                   style={{width: 250}}
@@ -180,7 +183,7 @@ export default class EpgList extends Component {
                   onKeyDown={this._handleEnter}
                   onBlur={this._handleSearch}
                   onChange={(e, {value}) => this.setState({searchString: value})}
-                  placeholder='Enter search string...' />
+                  placeholder='Enter search string...' /> */}
               </div>
               <div>
                 {items.length > 0 && <Button

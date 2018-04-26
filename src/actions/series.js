@@ -66,11 +66,20 @@ export const getSeries = (page = 1, perPage = 20, filter = {}) => {
   }).catch(error => console.error(error))
 }
 
-export const seriesSearch = (text, limit = 30, skip = 0) => {
+export const seriesSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => {
   return client().query(`
     query {
       viewer {
-        seriesSearch(q: "${text}", limit: ${limit}, skip: ${skip}) {
+        seriesSearch(
+          query: {
+            query_string: {
+              query: "${text}",
+              default_operator: ${operator}
+            }
+          },
+          limit: ${limit},
+          skip: ${skip}
+        ) {
           count
           items: hits {
             _id
