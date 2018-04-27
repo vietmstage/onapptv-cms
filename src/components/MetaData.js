@@ -2,10 +2,13 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {Form, Button, Label, Divider} from 'semantic-ui-react'
 import {toast} from 'react-toastify'
+import { getConfig } from '../actions/common';
+import isEmpty from 'lodash/isEmpty'
 export default class MetaData extends Component {
   static propTypes = {
     onUpdateMeta: PropTypes.func,
-    metaData: PropTypes.object
+    metaData: PropTypes.object,
+    type: PropTypes.string
   }
 
   state = {
@@ -15,9 +18,24 @@ export default class MetaData extends Component {
   }
 
   componentDidMount () {
-    if (this.props.metaData) {
-      this.setState({metaData: this.props.metaData})
-    }
+    const {type, onUpdateMeta} = this.props
+    getConfig({
+      filter: {type}
+    }).then(result => {
+      let metaData = {}
+      if (result && !result.errors) {
+        result.data && result.data.map(config => metaData[config.name] = '')
+      }
+      if (!isEmpty(this.props.metaData)) {
+        this.setState({metaData: {...this.props.metaData, ...metaData}}, () => {
+          onUpdateMeta && onUpdateMeta(this.state.metaData)
+        })
+      } else {
+        this.setState({metaData},() => {
+          onUpdateMeta && onUpdateMeta(this.state.metaData)
+        })
+      }
+    })
   }
 
   _handleMetaChange = (key, value) => {
@@ -67,7 +85,7 @@ export default class MetaData extends Component {
               onMetaRemove={() => this._handleMetaRemove(key)}
             />
           </div>)}
-          {!!Object.keys(metaData).length && <Divider />}
+          {/* {!!Object.keys(metaData).length && <Divider />}
           <div>
             <Form.Group widths='equal' style={{alignItems: 'flex-end'}}>
               <Form.Input
@@ -97,7 +115,7 @@ export default class MetaData extends Component {
                 />
               </Form.Field>
             </Form.Group>
-          </div>
+          </div> */}
         </Form>
       </div>
     )
@@ -119,7 +137,7 @@ class MetaItem extends Component {
     const {metaKey, metaValue} = this.props
     return (
       <Form.Group widths='equal'>
-        <Form.Field style={{textAlign: 'right', alignSelf: 'center'}}>
+        <Form.Field style={{textAlign: 'right', alignSelf: 'center', width: 100}}>
           <Label content={metaKey} />
         </Form.Field>
         <Form.Input
@@ -127,7 +145,7 @@ class MetaItem extends Component {
           value={metaValue}
           onChange={(e, {value}) => this.props.onMetaChange(value)}
         />
-        <Form.Field style={{width: 42}}>
+        {/* <Form.Field style={{width: 42}}>
           <Button
             icon='close'
             style={{
@@ -138,7 +156,7 @@ class MetaItem extends Component {
             }}
             onClick={this.props.onMetaRemove}
           />
-        </Form.Field>
+        </Form.Field> */}
       </Form.Group>
     )
   }

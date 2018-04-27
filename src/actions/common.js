@@ -72,3 +72,63 @@ export const createPeople = record => {
     }
   `, {record}).then(result => result.data.admin.peopleCreate).catch(err => console.error(err))
 }
+
+const configOutput = `
+  name
+  version
+  url
+  type
+  _id
+`
+
+export const getConfig = ({ filter, skip = 0, limit = 100 }) => {
+  return client().query(`
+    query ($filter: FilterFindManyconfigtypeInput) {
+      viewer {
+        fileMany (filter: $filter) {
+          ${configOutput}
+        }
+      }
+    }
+  `, { filter }).then(result => {
+    if (result && !result.errors) return {data: result.data.viewer.fileMany}
+    return result
+  }).catch(err => console.error(err))
+}
+
+export const configCreate = ({ record }) => {
+  return client().query(`
+    mutation ($record: CreateOneconfigtypeInput!) {
+      admin {
+        configCreate ( record: $record ) {
+          recordId
+          record {
+            ${configOutput}
+          }
+        }
+      }
+    }
+  `, { record }).then(result => {
+    if (result && !result.errors) return {data: result.data.admin.configCreate || {}}
+    return result
+  }).catch(err => console.error(err))
+}
+
+export const configRemove = (_id) => {
+  return client().query(`
+    mutation {
+      admin {
+        fileRemoveOne (
+          filter: {
+            _id: "${_id}"
+          }
+        ) {
+          recordId
+        }
+      }
+    }
+  `).then(result => {
+    if (result && !result.errors) return {data: result.data.admin.fileRemoveOne || {}}
+    return result
+  })
+}

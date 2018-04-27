@@ -46,9 +46,13 @@ export const newsSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
       viewer {
         newsSearch(
           query: {
-            query_string: {
-              query: "${text}",
-              default_operator: ${operator}
+            bool: {
+              must: {
+                query_string: {
+                  query: "${text}",
+                  default_operator: ${operator}
+                }
+              }
             }
           },
           limit: ${limit},

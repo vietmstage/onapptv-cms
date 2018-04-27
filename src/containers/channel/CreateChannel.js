@@ -85,7 +85,7 @@ export default class CreateChannel extends Component {
 
   _debounceSearch = debounce((searchQuery) => {
     let options = []
-    videoSearch(searchQuery).then(data => {
+    videoSearch({text: searchQuery}).then(data => {
       if(data.items) {
         data.items.forEach(item => options.push({text: item.title, value: item._id}))
         this.setState({videoOptions: options})
@@ -235,6 +235,7 @@ export default class CreateChannel extends Component {
           <Segment>
             <MetaData
               onUpdateMeta={this._handleUpdateMeta}
+              type='channel-meta'
             />
           </Segment>
         </Segment.Group>

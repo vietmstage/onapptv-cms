@@ -125,10 +125,10 @@ export default class EpgList extends Component {
       this.setState({isArchivingIds: [], archivedItem: {}})
       if (result && !result.errors) {
         this.setState({selected: []})
-        toast.success(`Video [${archivedItem.title}] archived successfully.`)
+        toast.success(`Video [${archivedItem.videoData.title}] archived successfully.`)
         this._handleGetEpgList()
       } else {
-        toast.error(`Video [${archivedItem.title}] archived failed.`)
+        toast.error(`Video [${archivedItem.videoData.title}] archived failed.`)
       }
     })
   }
@@ -272,7 +272,7 @@ export default class EpgList extends Component {
             url='/epg/list' />
           <Confirm
             open={showConfirm}
-            content={`Are you sure to archive epg [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to archive epg [${(this.state.archivedItem.videoData && this.state.archivedItem.videoData.title) || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}

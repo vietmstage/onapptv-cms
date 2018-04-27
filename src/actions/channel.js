@@ -64,9 +64,13 @@ export const channelSearch = ({text, limit = 10, skip = 0, operator = 'and'}) =>
       viewer {
         channelSearch(
           query: {
-            query_string: {
-              query: "${text}",
-              default_operator: ${operator}
+            bool: {
+              must: {
+                query_string: {
+                  query: "${text}",
+                  default_operator: ${operator}
+                }
+              }
             }
           },
           limit: ${limit},
@@ -162,7 +166,7 @@ export const updateChannel = data => {
 
 export const addEPG = data => {
   return client().query(`
-    mutation ($data: CreateOneepgTypeInput!){
+    mutation ($data: CreateOneepgtypeInput!){
       admin {
         epgCreate(record: $data) {
           recordId

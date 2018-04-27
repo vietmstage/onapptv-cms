@@ -41,7 +41,7 @@ export default class ArchivedVideoList extends Component {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      videoSearch(confirmedSearchString, pageSize, (activePage - 1) * pageSize).then(data => {
+      videoSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({isLoading: false, isSearching: false})
         if(!data) {
           toast.error('Cannot search channel!')

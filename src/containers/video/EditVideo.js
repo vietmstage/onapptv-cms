@@ -143,7 +143,7 @@ export default class EditVideo extends Component {
 
   _debounceSearch = debounce((searchQuery) => {
     let options = []
-    seriesSearch(searchQuery).then(data => {
+    seriesSearch({text: searchQuery, limit: 20}).then(data => {
       this.setState({searchingSeries: false})
       if(data.items) {
         data.items.forEach(item => options.push({text: item.title, value: item._id}))
@@ -312,6 +312,7 @@ export default class EditVideo extends Component {
               <MetaData
                 onUpdateMeta={this._handleUpdateMeta}
                 metaData={metadata}
+                type='video-meta'
               />
             </Segment>
           </Segment.Group>

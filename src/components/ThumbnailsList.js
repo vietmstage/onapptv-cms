@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import ImageUpload from './common/ImageUpload'
 import {Form, Dimmer, Loader, Icon} from 'semantic-ui-react'
+import { getConfig } from '../actions/common'
+import DropDown from './common/Dropdown'
 export default class ThumbnailsList extends Component {
   static propTypes = {
     onDataCallback: PropTypes.func,
@@ -18,12 +20,21 @@ export default class ThumbnailsList extends Component {
   state = {
     totalThumb: 0,
     thumbnails: [],
-    thumbnailsData: []
+    thumbnailsData: [],
+    thumbnailName: []
   }
 
   componentDidMount () {
     const {isEdit, data} = this.props
-
+    getConfig({
+      filter: {type: 'image-name'}
+    }).then(result => {
+      if (result && !result.errors) {
+        let thumbnailName = []
+        result.data && result.data.map(config => thumbnailName.push({text: config.name, value: config.name}))
+        this.setState({thumbnailName})
+      }
+    })
     if (isEdit && data && data.length) {
       let thumbnails = []
       data.map(item => thumbnails.push({
@@ -150,13 +161,20 @@ export default class ThumbnailsList extends Component {
             <img src={thumb.url} alt=''/>
             <div className='btn-close' onClick={() => this._handleThumbnailRemove(index)}><Icon name='close' /></div>
           </div>
-          <div className="ui form">
-            <Form.Input
+          <div className="ui form" style={{marginTop: 5}}>
+            <DropDown
+              search fluid selection
+              placeholder='Image name'
+              options={this.state.thumbnailName}
+              value={(thumbnailsData && thumbnailsData[index] && thumbnailsData[index].name) || ''}
+              onChange={(e, {value}) => this._handleThumbnailNameChange(index, value)}
+            />
+            {/* <Form.Input
               label='Thumbnail name:'
               placeholder='Thumbnail name'
               value={(thumbnailsData && thumbnailsData[index] && thumbnailsData[index].name) || ''}
               onChange={(e, {value}) => this._handleThumbnailNameChange(index, value)}
-            />
+            /> */}
           </div>
         </div>)}
         {this._renderTempThumb()}

@@ -34,7 +34,7 @@ export default class VideoSearch extends Component {
     this.setState({
       isSearching: true
     })
-    videoSearch(searchString, 30).then(data => {
+    videoSearch({text: searchString, limit: 30}).then(data => {
       console.log('data', data)
       this.setState({isSearching: false})
       if(data && !data.error) {

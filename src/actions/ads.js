@@ -43,9 +43,13 @@ export const adsSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
       viewer {
         adsSearch(
           query: {
-            query_string: {
-              query: "${text}",
-              default_operator: ${operator}
+            bool: {
+              must: {
+                query_string: {
+                  query: "${text}",
+                  default_operator: ${operator}
+                }
+              }
             }
           },
           limit: ${limit},

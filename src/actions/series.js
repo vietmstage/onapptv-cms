@@ -72,9 +72,13 @@ export const seriesSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => 
       viewer {
         seriesSearch(
           query: {
-            query_string: {
-              query: "${text}",
-              default_operator: ${operator}
+            bool: {
+              must: {
+                query_string: {
+                  query: "${text}",
+                  default_operator: ${operator}
+                }
+              }
             }
           },
           limit: ${limit},

@@ -25,7 +25,8 @@ export default class EditChannel extends Component {
     startTime: '',
     endTime: '',
     epgList: [],
-    loadingChannel: false
+    loadingChannel: false,
+    loadingVideo: false
   }
 
   componentWillMount () {
@@ -107,12 +108,14 @@ export default class EditChannel extends Component {
   }
 
   _handleSearchChange = (e, {searchQuery}) => {
+    this.setState({loadingVideo: true})
     this._debounceSearch(searchQuery)
   }
 
   _debounceSearch = debounce((searchQuery) => {
     let options = []
-    videoSearch(searchQuery).then(data => {
+    videoSearch({text: searchQuery}).then(data => {
+      this.setState({loadingVideo: false})
       if(data.items) {
         data.items.forEach(item => options.push({text: item.title, value: item._id}))
         this.setState({videoOptions: options})
@@ -199,7 +202,7 @@ export default class EditChannel extends Component {
   }
 
   render() {
-    const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel} = this.state
+    const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel, loadingVideo} = this.state
 
     if (loadingChannel) return <div className='div__loading-full'><Dimmer active inverted><Loader /></Dimmer></div>
 
@@ -265,6 +268,7 @@ export default class EditChannel extends Component {
             <MetaData
               onUpdateMeta={this._handleUpdateMeta}
               metaData={metadata}
+              type='channel-meta'              
             />
             <div style={{textAlign: 'right'}}>
               <Button primary content='Update' onClick={this._handleUpdate}/>
@@ -293,6 +297,7 @@ export default class EditChannel extends Component {
                           selection search fluid
                           placeholder='Video title'
                           options={videoOptions}
+                          loading={loadingVideo}
                           onChange={(e, {name, value}) => this.setState({[name]: value})}
                           onSearchChange={this._handleSearchChange}
                           value={videoId}

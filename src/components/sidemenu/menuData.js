@@ -115,17 +115,27 @@ const menuData = [
     ]
   },
   {
-    title: 'Meta',
+    title: 'File',
     items: [
       {
-        title: 'Meta List',
-        to: '/meta/list',
+        title: 'File List',
+        to: '/file/list',
         icon: 'list'
       },
       {
-        title: 'Add Meta',
-        to: '/meta/add',
+        title: 'Add file',
+        to: '/file/add',
         icon: 'code'
+      }
+    ]
+  },
+  {
+    title: 'Setting',
+    items: [
+      {
+        title: 'Config',
+        to: '/settings/config',
+        icon: 'configure'
       }
     ]
   }

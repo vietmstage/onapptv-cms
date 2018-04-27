@@ -29,19 +29,19 @@ export default class MetaList extends Component {
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetMetaList)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetFiles)
     } else {
-      this._handleGetMetaList()
+      this._handleGetFiles()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetMetaList)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetFiles)
     }
   }
 
-  _handleGetMetaList = () => {
+  _handleGetFiles = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
@@ -82,13 +82,13 @@ export default class MetaList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetMetaList)
+        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetFiles)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetMetaList)
+    this.setState({pageSize: data.value}, this._handleGetFiles)
   }
 
   _handleSelect = (id) => {
@@ -124,7 +124,7 @@ export default class MetaList extends Component {
     //   if (result && !result.errors) {
     //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
     //     toast.success(`Video [${archivedItem.title}] archived successfully.`)
-    //     this._handleGetMetaList()
+    //     this._handleGetFiles()
     //   } else {
     //     toast.error(`Video [${archivedItem.title}] archived failed.`)
     //   }
@@ -141,7 +141,7 @@ export default class MetaList extends Component {
     //   if (result && !result.errors) {
     //     toast.success(`[${selected.length}] selected videos archived successfully.`)
     //     this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-    //     this._handleGetMetaList()
+    //     this._handleGetFiles()
     //   } else {
     //     toast.error(`Archived videos failed.`)
     //   }
@@ -157,7 +157,7 @@ export default class MetaList extends Component {
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Meta List</h2>
+            <h2>Files List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -192,9 +192,9 @@ export default class MetaList extends Component {
                 <Button
                   size='tiny'
                   primary
-                  content='Add meta'
+                  content='Add new file'
                   as={Link}
-                  to='/meta/add' />
+                  to='/file/add' />
               </div>
             </div>
           </Segment>
@@ -256,7 +256,7 @@ export default class MetaList extends Component {
                         /> */}
                         <Popup
                           trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                          content='Archive this meta.'
+                          content='Archive this file.'
                           inverted
                         />
                       </div>}
@@ -272,10 +272,10 @@ export default class MetaList extends Component {
             total={total}
             history={history}
             onchangeSize={this._changePageSize}
-            url='/meta/list' />
+            url='/file/list' />
           <Confirm
             open={showConfirm}
-            content={`Are you sure to archive meta [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to archive file [${this.state.archivedItem.title || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
@@ -283,7 +283,7 @@ export default class MetaList extends Component {
           />
           <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to archive all these ${selected.length} selected metas?`}
+            content={`Are you sure to archive all these ${selected.length} selected files?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}

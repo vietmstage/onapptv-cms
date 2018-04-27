@@ -20,9 +20,11 @@ const EditNews = asyncComponent(() => import('./containers/news/EditNews').then(
 const AdsList = asyncComponent(() => import('./containers/ads/AdsList').then(module => module.default))
 const CreateAds = asyncComponent(() => import('./containers/ads/CreateAds').then(module => module.default))
 const EditAds = asyncComponent(() => import('./containers/ads/EditAds').then(module => module.default))
-const CreateMeta = asyncComponent(() => import('./containers/meta/CreateMeta').then(module =>module.default))
-const MetaList = asyncComponent(() => import('./containers/meta/MetaList').then(module =>module.default))
-const EpgList = asyncComponent(() => import('./containers/epg/EpgList').then(module =>module.default))
+const CreateMeta = asyncComponent(() => import('./containers/meta/CreateMeta').then(module => module.default))
+const MetaList = asyncComponent(() => import('./containers/meta/MetaList').then(module => module.default))
+const EpgList = asyncComponent(() => import('./containers/epg/EpgList').then(module => module.default))
+const ArchivedEpgList = asyncComponent(() => import('./containers/epg/ArchivedEpgList').then(module => module.default))
+const Config = asyncComponent(() => import('./containers/settings/Config').then(module => module.default))
 export default class Routes extends Component {
   render () {
     return (
@@ -39,16 +41,18 @@ export default class Routes extends Component {
         <Route path='/channel/list/:page?' component={ChannelList} />
         <Route path='/channel/add' component={CreateChannel} />
         <Route path='/channel/edit/:channelId?' component={EditChannel} />
-        <Route path='/channel/archived/:page?' component={ArchivedChannelList} />        
+        <Route path='/channel/archived/:page?' component={ArchivedChannelList} />
         <Route path='/news/list/:page?' component={NewsList} />
         <Route path='/news/add' component={CreateNews} />
         <Route path='/news/edit/:newsId' component={EditNews} />
         <Route path='/ads/list/:page?' component={AdsList} />
         <Route path='/ads/add' component={CreateAds} />
         <Route path='/ads/edit/:adsId?' component={EditAds} />
-        <Route path='/meta/add' component={CreateMeta} />
-        <Route path='/meta/list/:page?' component={MetaList} />
+        <Route path='/file/add' component={CreateMeta} />
+        <Route path='/file/list/:page?' component={MetaList} />
         <Route path='/epg/list/:page?' component={EpgList} />
+        <Route path='/epg/archived/:page?' component={ArchivedEpgList} />
+        <Route path='/settings/config' component={Config} />
       </React.Fragment>
     )
   }

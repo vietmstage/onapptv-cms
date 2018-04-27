@@ -15,11 +15,11 @@ const epgOutput = `
     title
   }
 `
-export const getEpgList = ({page = 1, perPage = 20}) => {
+export const getEpgList = ({page = 1, perPage = 20, filter = {}}) => {
   return client().query(`
-    query {
+    query ($filter: FilterFindManyepgtypeInput) {
       viewer {
-        epgPagination (page: ${page}, perPage: ${perPage}) {
+        epgPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
           count
           items {
             ${epgOutput}
@@ -27,7 +27,7 @@ export const getEpgList = ({page = 1, perPage = 20}) => {
         }
       }
     }
-  `).then(result => {
+  `, {filter}).then(result => {
     if (result && !result.errors) return {data: result.data.viewer.epgPagination}
     return result
   }).catch(err => console.error(err))
@@ -39,9 +39,13 @@ export const epgSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
       viewer {
         epgSearch(
           query: {
-            query_string: {
-              query: "${text}",
-              default_operator: ${operator}
+            bool: {
+              must: {
+                query_string: {
+                  query: "${text}",
+                  default_operator: ${operator}
+                }
+              }
             }
           },
           limit: ${limit},
@@ -71,7 +75,7 @@ export const epgSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
 
 export const epgUpdate = ({record, filter}) => {
   return client().query(`
-    mutation ($record: UpdateOneepgTypeInput!, $filter: FilterUpdateOneepgTypeInput) {
+    mutation ($record: UpdateOneepgtypeInput!, $filter: FilterUpdateOneepgtypeInput) {
       admin {
         epgUpdateOne (record: $record, filter: $filter) {
           recordId

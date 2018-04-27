@@ -145,7 +145,7 @@ export default class CreateVideo extends Component {
 
   _debounceSearch = debounce((searchQuery) => {
     let options = []
-    seriesSearch(searchQuery).then(data => {
+    seriesSearch({text: searchQuery, limit: 20}).then(data => {
       if(data.items) {
         data.items.forEach(item => options.push({text: item.title, value: item._id}))
         this.setState({seriesOptions: options})
@@ -349,6 +349,7 @@ export default class CreateVideo extends Component {
             <Segment>
               <MetaData
                 onUpdateMeta={this._handleUpdateMeta}
+                type='video-meta'
               />
             </Segment>
           </Segment.Group>

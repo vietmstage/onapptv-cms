@@ -1,52 +1,50 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
 import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Dimmer, Confirm } from 'semantic-ui-react'
-import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
+import { getEpgList, epgSearch, epgUpdate } from '../../actions/epg'
 import Pagination from '../../components/common/Pagination'
-import { getSeries, seriesSearch, updateSeriesMany } from '../../actions/series';
 import {toast} from 'react-toastify'
-export default class ArchivedSeriesList extends Component {
+export default class ArchivedEpgList extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
+    confirmedSearchString: '',
     searchString: '',
     activePage: 1,
-    pageSize: 20,
+    pageSize: 10,
     items: [],
     total: 0,
-    confirmedSearchString: '',
     selected: [],
-    isLoading: true,
-    archivedItem: {},
     isArchivingIds: [],
     showConfirm: false,
-    showBulkConfirm: false
+    showBulkConfirm: false,
+    archivedItem: {}
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetSeries)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetEpgList)
     } else {
-      this._handleGetSeries()
+      this._handleGetEpgList()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetSeries)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetEpgList)
     }
   }
 
-  _handleGetSeries = () => {
+  _handleGetEpgList = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      seriesSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
+      epgSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({isLoading: false, isSearching: false})
         if(!data) {
-          toast.error('Cannot search series!')
+          toast.error('Cannot search channel!')
           return
         }
         const {items, count} = data
@@ -58,19 +56,16 @@ export default class ArchivedSeriesList extends Component {
       })
       return
     }
-    getSeries(activePage, pageSize, {state: 'archived'}).then(result => {
+    getEpgList({pageg: activePage, perPage: pageSize, filter: {state: 'archived'}}).then(result => {
       this.setState({isLoading: false, isSearching: false})
-      if(!result) return
-      if(result.errors && result.errors.length) {
-        toast.error('Cannot get series list!')
-        return
+      if (result && !result.errors) {
+        const {items, count} = result.data
+        this.setState({
+          items,
+          total: count,
+          selected: []
+        })
       }
-      const {items, count} = result.data.viewer.data
-      this.setState({
-        items,
-        total: count,
-        selected: []
-      })
     })
   }
 
@@ -83,19 +78,13 @@ export default class ArchivedSeriesList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString}, this._handleGetSeries)
+        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetEpgList)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetSeries)
-  }
-
-  _handlePaginationChange = (e, {activePage}) => {
-    this.setState({
-      activePage
-    }, this._handleGetSeries )
+    this.setState({pageSize: data.value}, this._handleGetEpgList)
   }
 
   _handleSelect = (id) => {
@@ -121,50 +110,71 @@ export default class ArchivedSeriesList extends Component {
   }
 
   _handleRestore = () => {
-    const {archivedItem, isArchivingIds} = this.state
+    const {archivedItem, selected, isArchivingIds} = this.state
     isArchivingIds.push(archivedItem._id)
     this.setState({showConfirm: false, isArchivingIds})
-    updateSeriesMany(
-      {state: 'published'},
-      {_ids: isArchivingIds}
-    ).then(result => {
+    // setTimeout(() => {
+    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
+    //   archivedCompanies.push(archivedItem._id)
+    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
+    //   selected.splice(selected.indexOf(archivedItem._id), 1)
+    //   isLoading.splice(isLoading.indexOf(archivedItem._id), 1)
+    //   this.setState({selected, isLoading})
+    //   toast.success(`Company [${archivedItem.name}] archived successfully.`)
+    // }, 1000)
+    epgUpdate({
+      record: {state: 'published'},
+      filter: {_ids: isArchivingIds}
+    }).then(result => {
       if (result && !result.errors) {
-        toast.success(`Series [${archivedItem.title}] restored successfully.`)
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        this._handleGetSeries()
+        toast.success(`Epg [${archivedItem.videoData.title}] restored successfully.`)
+        this._handleGetEpgList()
       } else {
-        toast.error(`Series [${archivedItem.title}] restored failed.`)
+        toast.error(`Epg [${archivedItem.videoData.title}] restored failed.`)
       }
     })
   }
 
   _handleBulkRestore = () => {
-    const {selected} = this.state
+    const {selected, companies} = this.state
+    // const tmp = cloneDeep(companies)
     this.setState({isArchivingIds: selected, showBulkConfirm: false})
-    updateSeriesMany(
-      {state: 'published'},
-      {_ids: selected}
-    ).then(result => {
+    // setTimeout(() => {
+    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
+    //   tmp.map((company, index) => {
+    //     if (selected.indexOf(company._id) !== -1) archivedCompanies.push(company._id)
+    //     return null
+    //   })
+    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
+    //   this.setState({isLoading: [], selected: []})
+    //   toast.success(`${selected.length} selected companies archived successfully.`)
+    // }, 2000)
+    epgUpdate({
+      record: {state: 'published'},
+      filter: {_ids: selected}
+    }).then(result => {
+      console.log(result)
       if (result && !result.errors) {
-        toast.success(`[${selected.length}] selected series restored successfully.`)
         this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
-        this._handleGetSeries()
+        toast.success(`[${selected.length}] selected epgs restored successfully.`)
+        this._handleGetEpgList()
       } else {
-        toast.error(`Restored series failed.`)
+        toast.error(`Restored epgs failed.`)
       }
     })
   }
 
   render() {
-    ChangeTitle('Series List')
+    ChangeTitle('Epg Archived List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showConfirm, showBulkConfirm} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showBulkConfirm, showConfirm} = this.state
 
     return (
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Series List</h2>
+            <h2>Epg Archived List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -179,7 +189,7 @@ export default class ArchivedSeriesList extends Component {
                     {key: 2, value: 'type', text: 'Type'},
                   ]}
                 /> */}
-                <Input
+                {/* <Input
                   icon='search'
                   loading={isSearching}
                   style={{width: 250}}
@@ -187,12 +197,12 @@ export default class ArchivedSeriesList extends Component {
                   onKeyDown={this._handleEnter}
                   onBlur={this._handleSearch}
                   onChange={(e, {value}) => this.setState({searchString: value})}
-                  placeholder='Enter search string...' />
+                  placeholder='Enter search string...' /> */}
               </div>
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Restore selected series'
+                  content='Restore epgs'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
@@ -204,7 +214,8 @@ export default class ArchivedSeriesList extends Component {
               : <i style={{color: '#999'}}>
                 Sorry. There's nothing to show.
               </i>}
-          </Segment>}
+          </Segment>
+          }
         </Segment.Group>
         {!!items.length && <div style={{position: 'relative'}}>
           {isLoading && <Dimmer active inverted><Loader /></Dimmer>}
@@ -219,10 +230,8 @@ export default class ArchivedSeriesList extends Component {
                   />
                 </Table.HeaderCell>
                 <Table.HeaderCell style={{width: 40}}>#</Table.HeaderCell>
-                <Table.HeaderCell style={{width: 90}}/>
-                <Table.HeaderCell>Title</Table.HeaderCell>
-                <Table.HeaderCell>Description</Table.HeaderCell>
-                <Table.HeaderCell>Type</Table.HeaderCell>
+                <Table.HeaderCell>Video title</Table.HeaderCell>
+                <Table.HeaderCell>Channel title</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 100}}>Action</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -236,34 +245,23 @@ export default class ArchivedSeriesList extends Component {
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                     <Table.Cell>{index + 1}</Table.Cell>
-                    <Table.Cell>
-                      <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
-                        {!!item.originalImages.length && <img
-                          src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
-                          alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
-                          style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
-                        />}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell><Link to={'/series/edit/' + item._id}>{item.title}</Link></Table.Cell>
-                    <Table.Cell>{item.shortDescription}</Table.Cell>
-                    <Table.Cell>{item.type}</Table.Cell>
+                    <Table.Cell>{item.videoData.title}</Table.Cell>
+                    <Table.Cell>{item.channelData.title}</Table.Cell>
                     <Table.Cell>
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
                         <Loader active size='mini' inline />
                         <span style={{fontSize: '10px'}}> &nbsp; Restoring...</span>
                       </div>
-                      : 
-                      <div>
+                      : <div>
                         <Popup
-                          trigger={<Button icon='edit' size='mini' as={Link} to={`/series/edit/${item._id}`} />}
-                          content='Edit this series.'
+                          trigger={<Button icon='edit' size='mini' as={Link} to={`/epg/edit/${item._id}`} />}
+                          content='Edit this epg.'
                           inverted
                         />
                         <Popup
-                          trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                          content='Restore this series.'
+                          trigger={<Button icon='recycle' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
+                          content='Restore this epg.'
                           inverted
                         />
                       </div>}
@@ -279,10 +277,10 @@ export default class ArchivedSeriesList extends Component {
             total={total}
             history={history}
             onchangeSize={this._changePageSize}
-            url='/series/list' />
+            url='/epg/list' />
           <Confirm
             open={showConfirm}
-            content={`Are you sure to restore series [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to restore epg [${(this.state.archivedItem.videoData && this.state.archivedItem.videoData.title) || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
@@ -290,7 +288,7 @@ export default class ArchivedSeriesList extends Component {
           />
           <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to restore all these ${selected.length} selected series?`}
+            content={`Are you sure to restore all these ${selected.length} selected epgs?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}

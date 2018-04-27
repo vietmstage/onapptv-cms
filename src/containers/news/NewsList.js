@@ -133,16 +133,16 @@ export default class NewsList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Archive selected videos'
+                  content='Archive selected news'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
                 <Button
                   size='tiny'
                   primary
-                  content='Add video'
+                  content='Add news'
                   as={Link}
-                  to='/video/add' />
+                  to='/news/add' />
               </div>
             </div>
           </Segment>
