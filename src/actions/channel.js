@@ -183,16 +183,16 @@ export const addEPG = data => {
 
 export const updateChannelMany = (data, filter) => {
   return client().query(`
-    mutation ($data: UpdateOnechanneltypeInput!, $filter: FilterUpdateOnechanneltypeInput) {
+    mutation ($data: UpdateManychanneltypeInput!, $filter: FilterUpdateManychanneltypeInput) {
       admin {
-        channelUpdateOne (record: $data, filter: $filter) {
-          recordId
+        channelUpdateMany (record: $data, filter: $filter) {
+          numAffected
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.channelUpdateOne}
+      return {data: result.data.admin.channelUpdateMany}
     }
     return result
   }).catch(err => console.error(err))

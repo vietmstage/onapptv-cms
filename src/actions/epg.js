@@ -75,15 +75,15 @@ export const epgSearch = ({text, limit = 10, skip = 0, operator = 'and'}) => {
 
 export const epgUpdate = ({record, filter}) => {
   return client().query(`
-    mutation ($record: UpdateOneepgtypeInput!, $filter: FilterUpdateOneepgtypeInput) {
+    mutation ($record: UpdateManyepgtypeInput!, $filter: FilterUpdateManyepgtypeInput) {
       admin {
-        epgUpdateOne (record: $record, filter: $filter) {
-          recordId
+        epgUpdateMany (record: $record, filter: $filter) {
+          numAffected
         }
       }
     }
   `, {record, filter}).then(result => {
-    if (result && !result.errors) return {data: result.data.admin.epgUpdateOne}
+    if (result && !result.errors) return {data: result.data.admin.epgUpdateMany}
     return result
   }).catch(err => console.error(err))
 }

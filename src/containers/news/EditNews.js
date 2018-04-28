@@ -14,7 +14,8 @@ export default class EditNews extends Component {
   state = {
     newsData: {},
     key: '',
-    loadingNews: false
+    loadingNews: false,
+    loading: false
   }
 
   componentDidMount () {
@@ -69,12 +70,14 @@ export default class EditNews extends Component {
   _handleUpdate = () => {
     const { newsData } = this.state
     const { match: { params : {newsId: _id} }, history } = this.props
+    this.setState({loading: true})
     updateNews({
       record: newsData,
       filter: {
         _id
       }
     }).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         toast.success('Update news successfully!')
         history.push('/news/list')
@@ -91,7 +94,7 @@ export default class EditNews extends Component {
   render() {
     ChangeTitle('Create News')
 
-    const {newsData, key, loadingNews} = this.state
+    const {newsData, key, loadingNews, loading} = this.state
     if (loadingNews) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
 
     if (!loadingNews && isEmpty(newsData)) return <Segment><i style={{color: '#999'}}>Sorry. There's nothing to show.</i></Segment>
@@ -100,10 +103,11 @@ export default class EditNews extends Component {
       title = '',
       shortDescription = '',
       longDescription = '',
-      originalImages = []
+      originalImages = [],
+      url = ''
     } = newsData
     return (
-      <div key={key}>
+      <div key={key} className='main-content'>
         <h2>News Detail</h2>
         <Divider />
         <Segment.Group>
@@ -120,10 +124,16 @@ export default class EditNews extends Component {
             <div className='video-detail'>
               <div className="video__info">
                 <Form>
-
                   <Description
                     onDataCallback={this._handleUpdateDescription}
                     data={{title, shortDescription, longDescription}}
+                  />
+                  <Form.Input
+                    label='Url'
+                    placeholder='News Url'
+                    name='url'
+                    value={url}
+                    onChange={this._handleInputChange}
                   />
                 </Form>
               </div>
@@ -131,7 +141,7 @@ export default class EditNews extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Update' onClick={this._handleUpdate}/>
+              <Button primary content='Update' onClick={this._handleUpdate} loading={loading}/>
             </div>
           </Segment>
         </Segment.Group>

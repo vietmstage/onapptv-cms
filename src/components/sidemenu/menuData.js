@@ -39,6 +39,21 @@ const menuData = [
       }
     ]
   },
+  // {
+  //   title: 'Playlist',
+  //   items: [
+  //     {
+  //       title: 'Playlist',
+  //       to: '/playlist/list',
+  //       icon: 'list'
+  //     },
+  //     {
+  //       title: 'Archived Playlist',
+  //       to: '/playlist/archived',
+  //       icon: 'trash'
+  //     }
+  //   ]
+  // },
   {
     title: 'Epg',
     items: [

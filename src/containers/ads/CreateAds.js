@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import {Segment, Button, Divider, Form} from 'semantic-ui-react'
 import ThumbnailsList from '../../components/ThumbnailsList'
-import Description from '../../components/Description'
 import { adsCreate } from '../../actions/ads';
 import { toast } from 'react-toastify';
 import ChangeTitle from '../../libs/ChangeTitle';
@@ -9,7 +8,8 @@ import ChangeTitle from '../../libs/ChangeTitle';
 export default class CreateAds extends Component {
   state = {
     createData: {},
-    key: ''
+    key: '',
+    loading: false
   }
 
   _handleAddNewItem = (targetOptions, value) => {
@@ -56,7 +56,9 @@ export default class CreateAds extends Component {
     //   deal: createData.title,
     // }
     // delete createData.title
+    this.setState({loading: true})
     adsCreate(createData).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         toast.success('Create new Ads successfully!')
         this.props.history.push('/ads/list')
@@ -72,7 +74,7 @@ export default class CreateAds extends Component {
 
   render() {
     ChangeTitle('Create Ads')
-    const {createData, key} = this.state
+    const {createData, key, loading} = this.state
     const {
       deal = '',
       url = ''
@@ -117,7 +119,7 @@ export default class CreateAds extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Create' onClick={this._handleCreate}/>
+              <Button primary content='Create' onClick={this._handleCreate} loading={loading}/>
             </div>
           </Segment>
         </Segment.Group>

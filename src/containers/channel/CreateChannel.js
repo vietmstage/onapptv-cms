@@ -20,6 +20,7 @@ export default class CreateChannel extends Component {
     startTime: '',
     endTime: '',
     epgList: [],
+    loading: false
   }
 
   _handleInputChange = (e, {name, value}) => {
@@ -51,7 +52,9 @@ export default class CreateChannel extends Component {
   
   _handleCreate = () => {
     const {videoData, epgList} = this.state
+    this.setState({loading: true})
     channelCreate(videoData).then(result => {
+      this.setState({loading: false})
       if(!(result.errors && result.errors.length)) {
         if(epgList.length) {
           this._handleChanelAddEPG(result.data.admin.channelCreate.recordId)
@@ -177,7 +180,7 @@ export default class CreateChannel extends Component {
 
   render() {
     ChangeTitle('Create Channel')
-    const {videoData, key, modalOpen, videoOptions, videoId, startTime, endTime, epgList} = this.state
+    const {videoData, key, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loading} = this.state
     const {
       title = '',
       shortDescription = '',
@@ -328,7 +331,7 @@ export default class CreateChannel extends Component {
           </Segment>}
         </Segment.Group> */}
         <div style={{textAlign: 'right'}}>
-          <Button primary content='Create' onClick={this._handleCreate}/>
+          <Button primary content='Create' onClick={this._handleCreate} loading={loading}/>
         </div>
       </div>
     )

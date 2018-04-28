@@ -24,10 +24,10 @@ export default class MetaData extends Component {
     }).then(result => {
       let metaData = {}
       if (result && !result.errors) {
-        result.data && result.data.map(config => metaData[config.name] = '')
+        result.data && result.data.map(config => metaData[config.name] = '' )
       }
       if (!isEmpty(this.props.metaData)) {
-        this.setState({metaData: {...this.props.metaData, ...metaData}}, () => {
+        this.setState({metaData: {...metaData, ...this.props.metaData}}, () => {
           onUpdateMeta && onUpdateMeta(this.state.metaData)
         })
       } else {
@@ -137,7 +137,7 @@ class MetaItem extends Component {
     const {metaKey, metaValue} = this.props
     return (
       <Form.Group widths='equal'>
-        <Form.Field style={{textAlign: 'right', alignSelf: 'center', width: 100}}>
+        <Form.Field style={{textAlign: 'right', alignSelf: 'center'}}>
           <Label content={metaKey} />
         </Form.Field>
         <Form.Input

@@ -16,13 +16,6 @@ export default class CreateNews extends Component {
     key: ''
   }
 
-  _handleAddNewItem = (targetOptions, value) => {
-    this.setState({
-      [targetOptions]: [{ text: value, value }, ...this.state[targetOptions]],
-    })
-  }
-  _handleArrayChange = (e, { name, value }) => this.setState({ [name]: value })
-
   _handleInputChange = (e, {name, value}) => {
     let {createData} = this.state
     createData[name] = value
@@ -52,13 +45,12 @@ export default class CreateNews extends Component {
   
   _handleCreate = () => {
     const {createData} = this.state
-    newsCreate({
-      ...createData,
-      originalImages: createData.originalImages[0]
-    }).then(data => {
+    this.setState({loading: true})
+    newsCreate(createData).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         toast.success('Create new news successfully!')
-        this.props.history('/news/list')
+        this.props.history.push('/news/list')
         this.setState({
           createData: {},
           key: new Date().getTime().toString()
@@ -71,14 +63,15 @@ export default class CreateNews extends Component {
 
   render() {
     ChangeTitle('Create News')
-    const {createData, key} = this.state
+    const {createData, key, loading} = this.state
     const {
       title = '',
       shortDescription = '',
-      longDescription = ''
+      longDescription = '',
+      url = ''
     } = createData
     return (
-      <div key={key}>
+      <div key={key} className='main-content'>
         <h2>News Detail</h2>
         <Divider />
         <Segment.Group>
@@ -95,10 +88,16 @@ export default class CreateNews extends Component {
             <div className='video-detail'>
               <div className="video__info">
                 <Form>
-
                   <Description
                     onDataCallback={this._handleUpdateDescription}
                     data={{title, shortDescription, longDescription}}
+                  />
+                  <Form.Input
+                    label='Url'
+                    placeholder='News Url'
+                    name='url'
+                    value={url}
+                    onChange={this._handleInputChange}
                   />
                 </Form>
               </div>
@@ -106,7 +105,7 @@ export default class CreateNews extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Create' onClick={this._handleCreate}/>
+              <Button primary content='Create' onClick={this._handleCreate} loading={loading}/>
             </div>
           </Segment>
         </Segment.Group>

@@ -183,17 +183,17 @@ export default class NewsList extends Component {
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                     <Table.Cell>
-                      <div>
-                        {item.originalImages && <img
-                          src={item.originalImages && item.originalImages.url}
-                          alt={(item.originalImages && item.originalImages.name) || ''}
+                      <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
+                        {item.originalImages && !!item.originalImages.length && <img
+                          src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
+                          alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                           style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                         />}
                       </div>
                     </Table.Cell>
                     <Table.Cell><Link to={`/news/edit/${item._id}`}>{item.title}</Link></Table.Cell>
                     <Table.Cell>{item.shortDescription}</Table.Cell>
-                    <Table.Cell>{item.url}</Table.Cell>
+                    <Table.Cell><a href={item.url} target='_blank'>{item.url}</a></Table.Cell>
                     <Table.Cell>
                       <div>
                         <Popup

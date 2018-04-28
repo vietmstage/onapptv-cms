@@ -206,16 +206,16 @@ export const updateVideo = (data) => {
 
 export const updateVideoMany = (data, filter) => {
   return client().query(`
-    mutation ($data: UpdateOnevideotypeInput!, $filter: FilterUpdateOnevideotypeInput) {
+    mutation ($data: UpdateManyvideotypeInput!, $filter: FilterUpdateManyvideotypeInput) {
       admin {
-        videoUpdateOne (record: $data, filter: $filter) {
-          recordId
+        videoUpdateMany (record: $data, filter: $filter) {
+          numAffected
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.videoUpdateOne || {}}
+      return {data: result.data.admin.videoUpdateMany || {}}
     }
     return result
   }).catch(err => console.error(err))

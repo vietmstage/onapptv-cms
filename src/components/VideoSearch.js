@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {Divider, Input, Table, Button, Checkbox} from 'semantic-ui-react'
 import {videoSearch} from '../actions/video'
+import debounce from 'lodash/debounce'
 export default class VideoSearch extends Component {
   static propTypes = {
     onDataCallback: PropTypes.func,
@@ -51,6 +52,16 @@ export default class VideoSearch extends Component {
     })
   }
 
+  _handleSearchChange = (e, {value}) => {
+    this.setState({searchString: value, isSearching: true}, () => {
+      this._debounceSearch()
+    })
+  }
+
+  _debounceSearch = debounce(() => {
+    this._handleSearch()
+  }, 500)
+
   _handleSelect = (item) => {
     let {selected} = this.state
     const {onDataCallback} = this.props
@@ -74,7 +85,8 @@ export default class VideoSearch extends Component {
               style={{width: 250}}
               value={searchString}
               onKeyDown={this._handleEnter}
-              onChange={(e, {value}) => this.setState({searchString: value})}
+              // onChange={(e, {value}) => this.setState({searchString: value})}
+              onChange={this._handleSearchChange}
               placeholder='Enter search string...' />
             {/* <Button primary content='Search' onClick={this._handleSearch}/> */}
           </div>
@@ -100,7 +112,7 @@ export default class VideoSearch extends Component {
               >
                 <Table.Cell><Checkbox checked={Object.keys(selected).indexOf(item._id) !== -1} /></Table.Cell>
                 <Table.Cell>
-                  <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
+                  <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)', overflow: 'hidden'}}>
                     {item.originalImages && !!item.originalImages.length && <img
                       src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
                       alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}

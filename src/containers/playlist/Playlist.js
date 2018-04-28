@@ -1,50 +1,52 @@
 import React, { Component } from 'react'
 import ChangeTitle from '../../libs/ChangeTitle'
 import { Table, Segment, Input, Button, Popup, Checkbox, Loader, Dimmer, Confirm } from 'semantic-ui-react'
+import DropDown from '../../components/common/Dropdown'
 import { Link } from 'react-router-dom'
 // import {connect} from 'react-redux'
-import { getVideos, videoSearch, updateVideoMany } from '../../actions/video'
 import Pagination from '../../components/common/Pagination'
+import { getPlaylist, playlistSearch, updatePlaylistMany } from '../../actions/playlist';
 import {toast} from 'react-toastify'
-export default class ArchivedVideoList extends Component {
+export default class Playlist extends Component {
   state = {
     searchField: 'title',
     isSearching: false,
-    confirmedSearchString: '',
     searchString: '',
     activePage: 1,
-    pageSize: 10,
+    pageSize: 20,
     items: [],
     total: 0,
+    confirmedSearchString: '',
     selected: [],
+    isLoading: true,
+    archivedItem: {},
     isArchivingIds: [],
     showConfirm: false,
-    showBulkConfirm: false,
-    archivedItem: {}
+    showBulkConfirm: false
   }
 
   componentDidMount () {
     if (this.props.match.params.page) {
-      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetVideos)
+      this.setState({activePage: parseInt(this.props.match.params.page, 10) || 1}, this._handleGetPlaylist)
     } else {
-      this._handleGetVideos()
+      this._handleGetPlaylist()
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.match.params.page !== nextProps.match.params.page) {
-      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetVideos)
+      this.setState({activePage: parseInt(nextProps.match.params.page, 10) || 1}, this._handleGetPlaylist)
     }
   }
 
-  _handleGetVideos = () => {
+  _handleGetPlaylist = () => {
     const {activePage, pageSize, confirmedSearchString} = this.state
     this.setState({isLoading: true})
     if (confirmedSearchString.length !== 0) {
-      videoSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
+      playlistSearch({text: confirmedSearchString, limit: pageSize, skip: (activePage - 1) * pageSize}).then(data => {
         this.setState({isLoading: false, isSearching: false})
         if(!data) {
-          toast.error('Cannot search channel!')
+          toast.error('Cannot search playlist!')
           return
         }
         const {items, count} = data
@@ -56,16 +58,19 @@ export default class ArchivedVideoList extends Component {
       })
       return
     }
-    getVideos(activePage, pageSize, {state: 'archived'}).then(result => {
+    getPlaylist(activePage, pageSize).then(result => {
       this.setState({isLoading: false, isSearching: false})
-      if (result && !result.errors) {
-        const {items, count} = result.data
-        this.setState({
-          items,
-          total: count,
-          selected: []
-        })
+      if(!result) return
+      if(result.errors && result.errors.length) {
+        toast.error('Cannot get playlist list!')
+        return
       }
+      const {items, count} = result.data.viewer.data
+      this.setState({
+        items,
+        total: count,
+        selected: []
+      })
     })
   }
 
@@ -78,13 +83,19 @@ export default class ArchivedVideoList extends Component {
     if (confirmedSearchString !== searchString) {
       this.setState({isSearching: true, isLoading: true})
       setTimeout(() => {
-        this.setState({confirmedSearchString: searchString, activePage: 1}, this._handleGetVideos)
+        this.setState({confirmedSearchString: searchString}, this._handleGetPlaylist)
       }, 500)
     }
   }
 
   _changePageSize = (e, data) => {
-    this.setState({pageSize: data.value}, this._handleGetVideos)
+    this.setState({pageSize: data.value}, this._handleGetPlaylist)
+  }
+
+  _handlePaginationChange = (e, {activePage}) => {
+    this.setState({
+      activePage
+    }, this._handleGetPlaylist )
   }
 
   _handleSelect = (id) => {
@@ -109,74 +120,51 @@ export default class ArchivedVideoList extends Component {
     this.setState({archivedItem, showConfirm: true})
   }
 
-  _handleRestore = () => {
-    const {archivedItem, selected, isArchivingIds} = this.state
+  _handleArchive = () => {
+    const {archivedItem, isArchivingIds} = this.state
     isArchivingIds.push(archivedItem._id)
     this.setState({showConfirm: false, isArchivingIds})
-    // setTimeout(() => {
-    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
-    //   archivedCompanies.push(archivedItem._id)
-    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
-    //   selected.splice(selected.indexOf(archivedItem._id), 1)
-    //   isLoading.splice(isLoading.indexOf(archivedItem._id), 1)
-    //   this.setState({selected, isLoading})
-    //   toast.success(`Company [${archivedItem.name}] archived successfully.`)
-    // }, 1000)
-    updateVideoMany(
-      {state: 'published'},
+    updatePlaylistMany(
+      {state: 'archived'},
       {_ids: isArchivingIds}
     ).then(result => {
-      this.setState({isArchivingIds: []})
       if (result && !result.errors) {
-        this.setState({selected: [], archivedItem: {}})
-        toast.success(`Video [${archivedItem.title}] restored successfully.`)
-        this._handleGetVideos()
+        toast.success(`Playlist [${archivedItem.title}] archived successfully.`)
+        this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
+        this._handleGetPlaylist()
       } else {
-        toast.error(`Video [${archivedItem.title}] restored failed.`)
+        toast.error(`Playlist [${archivedItem.title}] archived failed.`)
       }
     })
   }
 
-  _handleBulkRestore = () => {
-    const {selected, companies} = this.state
-    // const tmp = cloneDeep(companies)
+  _handleBulkArchive = () => {
+    const {selected} = this.state
     this.setState({isArchivingIds: selected, showBulkConfirm: false})
-    // setTimeout(() => {
-    //   const archivedCompanies = JSON.parse(window.localStorage.getItem('archivedCompanies')) || []
-    //   tmp.map((company, index) => {
-    //     if (selected.indexOf(company._id) !== -1) archivedCompanies.push(company._id)
-    //     return null
-    //   })
-    //   window.localStorage.setItem('archivedCompanies', JSON.stringify(archivedCompanies))
-    //   this.setState({isLoading: [], selected: []})
-    //   toast.success(`${selected.length} selected companies archived successfully.`)
-    // }, 2000)
-    updateVideoMany(
-      {state: 'published'},
+    updatePlaylistMany(
+      {state: 'archived'},
       {_ids: selected}
     ).then(result => {
-      console.log(result)
-      this.setState({isArchivingIds: []})
       if (result && !result.errors) {
-        this.setState({selected: [], archivedItem: {}})
-        toast.success(`[${selected.length}] selected videos restored successfully.`)
-        this._handleGetVideos()
+        toast.success(`[${selected.length}] selected playlist archived successfully.`)
+        this.setState({selected: [], isArchivingIds: [], archivedItem: {}})
+        this._handleGetPlaylist()
       } else {
-        toast.error(`Restored videos failed.`)
+        toast.error(`Archived playlist failed.`)
       }
     })
   }
 
   render() {
-    ChangeTitle('Video List')
+    ChangeTitle('Playlist List')
     const {history} = this.props
-    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showBulkConfirm, showConfirm} = this.state
+    const {searchField, isSearching, searchString, activePage, items, total, pageSize, selected, isLoading, isArchivingIds, showConfirm, showBulkConfirm} = this.state
 
     return (
       <div>
         <Segment.Group>
           <Segment color='blue'>
-            <h2>Video List</h2>
+            <h2>Playlist List</h2>
             <div className="flex-box">
               <div>
                 {/* <DropDown
@@ -204,10 +192,16 @@ export default class ArchivedVideoList extends Component {
               <div>
                 {items.length > 0 && <Button
                   size='tiny'
-                  content='Restore videos'
+                  content='Archive selected playlist'
                   negative
                   disabled={selected.length === 0}
                   onClick={() => this.setState({showBulkConfirm: true})} />}
+                <Button
+                  size='tiny'
+                  primary
+                  content='Add Playlist'
+                  as={Link}
+                  to='/playlist/add' />
               </div>
             </div>
           </Segment>
@@ -216,8 +210,7 @@ export default class ArchivedVideoList extends Component {
               : <i style={{color: '#999'}}>
                 Sorry. There's nothing to show.
               </i>}
-          </Segment>
-          }
+          </Segment>}
         </Segment.Group>
         {!!items.length && <div style={{position: 'relative'}}>
           {isLoading && <Dimmer active inverted><Loader /></Dimmer>}
@@ -232,10 +225,11 @@ export default class ArchivedVideoList extends Component {
                   />
                 </Table.HeaderCell>
                 <Table.HeaderCell style={{width: 40}}>#</Table.HeaderCell>
-                <Table.HeaderCell style={{width: 90}}></Table.HeaderCell>
+                <Table.HeaderCell style={{width: 90}}/>
                 <Table.HeaderCell>Title</Table.HeaderCell>
                 <Table.HeaderCell>Description</Table.HeaderCell>
                 <Table.HeaderCell>Type</Table.HeaderCell>
+                <Table.HeaderCell>TypeId</Table.HeaderCell>
                 <Table.HeaderCell style={{width: 100}}>Action</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -251,31 +245,33 @@ export default class ArchivedVideoList extends Component {
                     <Table.Cell>{index + 1}</Table.Cell>
                     <Table.Cell>
                       <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
-                        {item.originalImages && !!item.originalImages.length && <img
+                        {!!item.originalImages.length && <img
                           src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
                           alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                           style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                         />}
                       </div>
                     </Table.Cell>
-                    <Table.Cell><Link to={'/video/edit/' + item._id}>{item.title}</Link></Table.Cell>
+                    <Table.Cell><Link to={'/playlist/edit/' + item._id}>{item.title}</Link></Table.Cell>
                     <Table.Cell>{item.shortDescription}</Table.Cell>
                     <Table.Cell>{item.type}</Table.Cell>
+                    <Table.Cell>{item.typeId}</Table.Cell>
                     <Table.Cell>
                       {isArchivingIds.indexOf(item._id) !== -1
                       ? <div style={{height: 21}}>
                         <Loader active size='mini' inline />
-                        <span style={{fontSize: '10px'}}> &nbsp; Restoring...</span>
+                        <span style={{fontSize: '10px'}}> &nbsp; Archiving...</span>
                       </div>
-                      : <div>
+                      : 
+                      <div>
                         <Popup
-                          trigger={<Button icon='edit' size='mini' as={Link} to={`/video/edit/${item._id}`} />}
-                          content='Edit this video.'
+                          trigger={<Button icon='edit' size='mini' as={Link} to={`/playlist/edit/${item._id}`} />}
+                          content='Edit this playlist.'
                           inverted
                         />
                         <Popup
-                          trigger={<Button icon='recycle' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
-                          content='Restore this video.'
+                          trigger={<Button icon='trash' size='mini' onClick={(e) => this._showConfirm(item, e)} />}
+                          content='Archive this playlist.'
                           inverted
                         />
                       </div>}
@@ -291,22 +287,22 @@ export default class ArchivedVideoList extends Component {
             total={total}
             history={history}
             onchangeSize={this._changePageSize}
-            url='/video/list' />
+            url='/playlist/list' />
           <Confirm
             open={showConfirm}
-            content={`Are you sure to restore video [${this.state.archivedItem.title || ''}] ?`}
+            content={`Are you sure to archive playlist [${this.state.archivedItem.title || ''}] ?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showConfirm: false})}
-            onConfirm={this._handleRestore}
+            onConfirm={this._handleArchive}
           />
           <Confirm
             open={showBulkConfirm}
-            content={`Are you sure to restore all these ${selected.length} selected videos?`}
+            content={`Are you sure to archive all these ${selected.length} selected playlist?`}
             cancelButton='No'
             confirmButton='Yes'
             onCancel={() => this.setState({showBulkConfirm: false})}
-            onConfirm={this._handleBulkRestore}
+            onConfirm={this._handleBulkArchive}
           />
         </div>}
       </div>

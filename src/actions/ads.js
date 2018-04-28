@@ -94,15 +94,15 @@ export const getAdsById = id => {
 export const updateAds = ({record, filter}) => {
   delete record._id
   return client().query(`
-    mutation ($record: UpdateOneadstypeInput!, $filter: FilterUpdateOneadstypeInput) {
+    mutation ($record: UpdateManyadstypeInput!, $filter: FilterUpdateManyadstypeInput) {
       admin {
-        adsUpdateOne (record: $record, filter: $filter) {
-          recordId
+        adsUpdateMany (record: $record, filter: $filter) {
+          numAffected
         }
       }
     }
   `, {record, filter}).then(result => {
-    if (result && !result.errors) return {data: result.data.admin.adsUpdateOne}
+    if (result && !result.errors) return {data: result.data.admin.adsUpdateMany}
     return result
   })
 }

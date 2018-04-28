@@ -26,7 +26,8 @@ export default class EditChannel extends Component {
     endTime: '',
     epgList: [],
     loadingChannel: false,
-    loadingVideo: false
+    loadingVideo: false,
+    loading: false
   }
 
   componentWillMount () {
@@ -83,7 +84,9 @@ export default class EditChannel extends Component {
 
   _handleUpdate = () => {
     const {videoData} = this.state
+    this.setState({loading: true})
     updateChannel(videoData).then(result => {
+      this.setState({loading: false})
       if(!(result.errors && result.errors.length)) {
         this.props.history.push('/channel/list')
         toast.success('Update channel successfully!')
@@ -202,7 +205,7 @@ export default class EditChannel extends Component {
   }
 
   render() {
-    const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel, loadingVideo} = this.state
+    const {videoData, modalOpen, videoOptions, videoId, startTime, endTime, epgList, loadingChannel, loadingVideo, loading} = this.state
 
     if (loadingChannel) return <div className='div__loading-full'><Dimmer active inverted><Loader /></Dimmer></div>
 
@@ -271,7 +274,7 @@ export default class EditChannel extends Component {
               type='channel-meta'              
             />
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Update' onClick={this._handleUpdate}/>
+              <Button primary content='Update' onClick={this._handleUpdate} loading={loading}/>
             </div>
           </Segment>
         </Segment.Group>

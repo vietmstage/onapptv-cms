@@ -25,11 +25,12 @@ const MetaList = asyncComponent(() => import('./containers/meta/MetaList').then(
 const EpgList = asyncComponent(() => import('./containers/epg/EpgList').then(module => module.default))
 const ArchivedEpgList = asyncComponent(() => import('./containers/epg/ArchivedEpgList').then(module => module.default))
 const Config = asyncComponent(() => import('./containers/settings/Config').then(module => module.default))
+const Playlist = asyncComponent(() => import('./containers/playlist/Playlist').then(module => module.default))
 export default class Routes extends Component {
   render () {
     return (
       <React.Fragment>
-        <Route exact path='/' component={Home} />
+        <Route exact path='/' component={VideoList} />
         <Route path='/video/list/:page?' component={VideoList} />
         <Route path='/video/add' component={CreateVideo} />
         <Route path='/video/edit/:videoId' component={EditVideo} />
@@ -53,6 +54,7 @@ export default class Routes extends Component {
         <Route path='/epg/list/:page?' component={EpgList} />
         <Route path='/epg/archived/:page?' component={ArchivedEpgList} />
         <Route path='/settings/config' component={Config} />
+        <Route path='/playlist/list/:page?' component={Playlist} />
       </React.Fragment>
     )
   }

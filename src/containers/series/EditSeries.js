@@ -114,8 +114,8 @@ export default class EditSeries extends Component {
 
   _handleUpdateSeries = () => {
     const {videoData, episodes} = this.state
-    this.setState({isPosting: true})
     delete videoData.episodes
+    this.setState({isPosting: true})
     updateSeries(videoData).then(result => {
       this.setState({isPosting: false})
       if(result && !result.errors) {
@@ -184,7 +184,7 @@ export default class EditSeries extends Component {
     } = videoData
     return (
       <div style={{position: 'relative'}}>
-        {isPosting && <Dimmer active inverted><Loader /></Dimmer>}
+        {/* {isPosting && <Dimmer active inverted><Loader /></Dimmer>} */}
         <h2>Series Detail</h2>
         <Divider />
         <Segment.Group>
@@ -325,7 +325,7 @@ export default class EditSeries extends Component {
           </Segment>
         </Segment.Group>
         <div style={{textAlign: 'right'}}>
-          <Button primary onClick={this._handleUpdateSeries}>Update</Button>
+          <Button primary onClick={this._handleUpdateSeries} loading={isPosting}>Update</Button>
         </div>
       </div>
     )

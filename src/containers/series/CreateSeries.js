@@ -121,7 +121,9 @@ export default class CreateSeries extends Component {
 
   _handleCreate = () => {
     const {videoData, episodes} = this.state
+    this.setState({loading: true})
     seriesCreate(videoData).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         if(Object.keys(episodes).length) this._handleUpdate(data.data.admin.seriesCreate.recordId)
         else {
@@ -166,7 +168,7 @@ export default class CreateSeries extends Component {
 
   render() {
     ChangeTitle('Create Series')
-    const {videoData, modalOpen, key, episodes} = this.state
+    const {videoData, modalOpen, key, episodes, loading} = this.state
     const {
       title = '',
       genreIds = [],
@@ -258,7 +260,12 @@ export default class CreateSeries extends Component {
             <div className='clearfix'>
               <h4 className='left'>Episodes list</h4>
               <div className='right'>
-                <Modal trigger={<Button size='mini' onClick={() => this.setState({modalOpen: true})}>Add episode to Series</Button>} size='small' open={modalOpen}>
+                <Modal
+                  trigger={<Button size='mini' onClick={() => this.setState({modalOpen: true})}>Add episode to Series</Button>}
+                  size='small'
+                  open={modalOpen}
+                  onClose={() => this.setState({modalOpen: false})}
+                >
                   <Modal.Header>Episode Detail</Modal.Header>
                   <Modal.Content>
                     <VideoSearch onDataCallback={this._handleGetEpisodesData} videosList={episodes}/>
@@ -310,7 +317,7 @@ export default class CreateSeries extends Component {
           </Segment>
         </Segment.Group>
         <div style={{textAlign: 'right'}}>
-          <Button primary onClick={this._handleCreate}>Create</Button>
+          <Button primary onClick={this._handleCreate} loading={loading}>Create</Button>
         </div>
       </div>
     )

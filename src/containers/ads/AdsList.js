@@ -185,10 +185,10 @@ export default class AdsList extends Component {
                   >
                     <Table.Cell><Checkbox checked={selected.indexOf(item._id) !== -1} /></Table.Cell>
                     <Table.Cell>
-                      <div>
-                        {item.originalImages && <img
-                          src={item.originalImages && item.originalImages.url}
-                          alt={(item.originalImages && item.originalImages.name) || ''}
+                      <div style={{width: 70, height: 45, backgroundColor: 'rgba(0,0,0,0.15)'}}>
+                        {item.originalImages && !!item.originalImages.length && <img
+                          src={item.originalImages && item.originalImages[item.originalImages.length - 1].url}
+                          alt={(item.originalImages && item.originalImages[item.originalImages.length - 1].name) || ''}
                           style={{width: 70, height: 45, verticalAlign: 'top', objectFit: 'cover'}}
                         />}
                       </div>

@@ -23,7 +23,9 @@ export default class CreateVideo extends Component {
     videoData: {},
     key: '',
     isLoadingVideo: false,
-    showForm: false
+    showForm: false,
+    isSkip: false,
+    loading: false
   }
 
   _handleGetVideo = (type = 'brightcove') => {
@@ -31,7 +33,6 @@ export default class CreateVideo extends Component {
     this.setState({isLoadingVideo: true})
     getVideoByContentId(contentId, type).then(result => {
       this.setState({isLoadingVideo: false})
-      console.log(result)
       if (!result) {
         toast.error('Can\'t get video detail')
         return
@@ -46,7 +47,6 @@ export default class CreateVideo extends Component {
       }
       const {data} = result
       let videoData = {...data, contentId}
-      delete videoData['__typename']
 
       this.setState({
         videoData,
@@ -62,7 +62,9 @@ export default class CreateVideo extends Component {
       toast.error('Please choose thumbnails for video.')
       return
     }
+    this.setState({loading: true})
     createVideo(videoData).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         toast.success('Create video successfully!')
         this.props.history.push('/video/list')
@@ -203,7 +205,7 @@ export default class CreateVideo extends Component {
 
   render() {
     ChangeTitle('Create Video')
-    const {seriesOptions, videoData, key, isLoadingVideo, showForm} = this.state
+    const {seriesOptions, videoData, key, isLoadingVideo, showForm, isSkip, loading} = this.state
     const {
       title = '',
       genreIds = [],
@@ -219,7 +221,8 @@ export default class CreateVideo extends Component {
       allowedCountries = [],
       seasonIndex = 0,
       episodeIndex = 0,
-      seriesId = ''
+      seriesId = '',
+      contentId = ''
     } = videoData
     return (
       <div key={key}>
@@ -244,7 +247,7 @@ export default class CreateVideo extends Component {
           </Segment>
         </Segment.Group> */}
         {isLoadingVideo && <Segment><div><Loader active inline size='mini' /> &nbsp; Loading data</div></Segment>}
-        {!showForm && <div style={{textAlign: 'right', marginTop: 15}}><button className='btn--transparent'><a style={{fontStyle: 'italic', cursor: 'pointer'}} onClick={(e) => {e.preventDefault(); this.setState({showForm: true})}}>Skip insert video id ?</a></button></div>}
+        {!showForm && <div style={{textAlign: 'right', marginTop: 15}}><button className='btn--transparent'><a style={{fontStyle: 'italic', cursor: 'pointer'}} onClick={(e) => {e.preventDefault(); this.setState({showForm: true, isSkip: true})}}>Skip insert video id ?</a></button></div>}
         {showForm &&
         <div>
           <Segment.Group>
@@ -270,6 +273,14 @@ export default class CreateVideo extends Component {
                       <Genres onDataCallback={this._handleUpdateGenres} genreIds={genreIds}/>
                       
                       <Tags onDataCallback={this._handleUpdateTags} tags={tags}/>
+
+                      {isSkip && <Form.Input
+                        label='ContentId'
+                        name='contentId'
+                        placeholder='Content Id'
+                        value={contentId}
+                        onChange={this._handleInputChange}
+                      />}
                     </Form.Group>
 
                     <People onDataCallback={this._handleUpdatePeople} data={{directorIds, castIds, producerIds}}/>
@@ -354,7 +365,7 @@ export default class CreateVideo extends Component {
             </Segment>
           </Segment.Group>
           <div style={{textAlign: 'right'}}>
-            <Button primary content='Create' onClick={this._handleVideoCreate}/>
+            <Button primary content='Create' onClick={this._handleVideoCreate} loading={loading}/>
           </div>
         </div>
         }

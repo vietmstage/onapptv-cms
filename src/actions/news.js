@@ -100,15 +100,15 @@ export const getNewsById = id => {
 export const updateNews = ({record, filter}) => {
   delete record._id
   return client().query(`
-    mutation ($record: UpdateOnenewstypeInput!, $filter: FilterUpdateOnenewstypeInput) {
+    mutation ($record: UpdateManynewstypeInput!, $filter: FilterUpdateManynewstypeInput) {
       admin {
-        newsUpdateOne (record: $record, filter: $filter) {
-          recordId
+        newsUpdateMany (record: $record, filter: $filter) {
+          numAffected
         }
       }
     }
   `, {record, filter}).then(result => {
-    if (result && !result.errors) return {data: result.data.admin.newsUpdateOne}
+    if (result && !result.errors) return {data: result.data.admin.newsUpdateMany}
     return result
   })
 }

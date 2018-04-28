@@ -1,62 +1,25 @@
 import {client} from './graphql'
-const episodesOutput = `
-  _id
-  contentId
-  durationInSeconds
-  publishDate
+const playlistOutput = `
   title
   longDescription
   shortDescription
-  feature
-  seriesId
-  seasonIndex
-  episodeIndex
+  typeId
   type
-  impression
   state
-  originalImages {
-    url
-    name
-    fileName
-  }
-`
-const seriesOutput = `
-  _id
-  contentId
-  publishDate
-  title
-  longDescription
-  shortDescription
-  updatedAt
   createdAt
-  originalImages {
-    url
-    name
-    fileName
-    scaledImage {
-      height
-      width
-      url
-    }
-  }
-  genreIds
-  producerIds
-  directorIds
-  castIds
-  tags
-  allowedCountries
-  episodes {
-    ${episodesOutput}
-  }
+  updatedAt
+  projectId
+  _id
+  typeData
 `
-export const getSeries = (page = 1, perPage = 20, filter = {}) => {
+export const getPlaylist = (page = 1, perPage = 20, filter = {}) => {
   return client().query(`
-    query ($filter: FilterFindManyseriestypeInput) {
+    query ($filter: FilterFindManyplaylisttypeInput) {
       viewer {
-        data: seriesPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
+        data: playlistPagination (page: ${page}, perPage: ${perPage}, filter: $filter) {
           count
           items {
-            ${seriesOutput}
+            ${playlistOutput}
           }
         }
       }
@@ -66,11 +29,11 @@ export const getSeries = (page = 1, perPage = 20, filter = {}) => {
   }).catch(error => console.error(error))
 }
 
-export const seriesSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => {
+export const playlistSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => {
   return client().query(`
     query {
       viewer {
-        seriesSearch(
+        playlistSearch(
           query: {
             bool: {
               must: {
@@ -88,14 +51,14 @@ export const seriesSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => 
           items: hits {
             _id
             data: fromMongo {
-              ${seriesOutput}
+              ${playlistOutput}
             }
           }
         }
       }
     }
   `).then(result => {
-    const data = result.data.viewer.seriesSearch
+    const data = result.data.viewer.playlistSearch
     if(!data.items.length) return data
     const {count, items} = data
     let newData = {count, items: []}
@@ -106,11 +69,11 @@ export const seriesSearch = ({text, limit = 30, skip = 0, operator = 'and'}) => 
   }).catch(err => console.error(err))
 }
 
-export const seriesCreate = (data) => {
+export const playlistCreate = (data) => {
   return client().query(`
-    mutation ($data: CreateOneseriestypeInput!) {
+    mutation ($data: CreateOneplaylisttypeInput!) {
       admin {
-        seriesCreate(record: $data) {
+        playlistCreate(record: $data) {
           recordId
         }
       }
@@ -118,13 +81,13 @@ export const seriesCreate = (data) => {
   `, {data}).then(data => data).catch(err => console.error(err))
 }
 
-export const updateSeries = (data) => {
+export const updatePlaylist = (data) => {
   const _id = data._id
   delete data._id
   return client().query(`
-    mutation ($data: UpdateOneseriestypeInput!) {
+    mutation ($data: UpdateOneplaylisttypeInput!) {
       admin {
-        seriesUpdateOne(
+        playlistUpdateOne(
           record: $data,
           filter: {
             _id: "${_id}"
@@ -135,44 +98,44 @@ export const updateSeries = (data) => {
       }
     }
   `, {data}).then(result => {
-    if (result && !result.errors) return {data: result.data.admin.seriesUpdateOne}
+    if (result && !result.errors) return {data: result.data.admin.playlistUpdateOne}
     return result
   }).catch(err => console.error(err))
 }
 
-export const getSeriesById = id => {
+export const getPlaylistById = id => {
   return client().query(`
     query {
       viewer {
-        seriesOne (
+        playlistOne (
           filter: {
             _id: "${id}"
           }
         ) {
-          ${seriesOutput}
+          ${playlistOutput}
         }
       }
     }
   `).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.viewer.seriesOne}
+      return {data: result.data.viewer.playlistOne}
     }
     return result
   }).catch(err => console.error(err))
 }
 
-export const updateSeriesMany = (data, filter) => {
+export const updatePlaylistMany = (data, filter) => {
   return client().query(`
-    mutation ($data: UpdateManyseriestypeInput!, $filter: FilterUpdateManyseriestypeInput) {
+    mutation ($data: UpdateManyplaylisttypeInput!, $filter: FilterUpdateManyplaylisttypeInput) {
       admin {
-        seriesUpdateMany (record: $data, filter: $filter) {
+        playlistUpdateMany (record: $data, filter: $filter) {
           numAffected
         }
       }
     }
   `, {data, filter}).then(result => {
     if (result && !result.errors) {
-      return {data: result.data.admin.seriesUpdateMany}
+      return {data: result.data.admin.playlistUpdateMany}
     }
     return result
   }).catch(err => console.error(err))

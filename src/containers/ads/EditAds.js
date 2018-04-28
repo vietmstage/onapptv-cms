@@ -13,7 +13,9 @@ export default class EditAds extends Component {
 
   state = {
     adsData: {},
-    key: ''
+    key: '',
+    loadingAds: false,
+    loading: false
   }
 
   componentDidMount () {
@@ -71,12 +73,14 @@ export default class EditAds extends Component {
   _handleUpdate = () => {
     let {adsData} = this.state
     const { match: { params : {adsId: _id} }, history } = this.props
+    this.setState({loading: true})
     updateAds({
       record: adsData,
       filter: {
         _id
       }
     }).then(data => {
+      this.setState({loading: false})        
       if(!(data.errors && data.errors.length)) {
         toast.success('Update Ads successfully!')
         history.push('/ads/list')
@@ -92,7 +96,7 @@ export default class EditAds extends Component {
 
   render() {
     ChangeTitle('Edit Ads')
-    const {adsData, key, loadingAds} = this.state
+    const {adsData, key, loadingAds, loading} = this.state
 
     if (loadingAds) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
 
@@ -143,7 +147,7 @@ export default class EditAds extends Component {
           </Segment>
           <Segment>
             <div style={{textAlign: 'right'}}>
-              <Button primary content='Update' onClick={this._handleUpdate}/>
+              <Button primary content='Update' onClick={this._handleUpdate} loading={loading}/>
             </div>
           </Segment>
         </Segment.Group>

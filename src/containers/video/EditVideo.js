@@ -25,7 +25,8 @@ export default class EditVideo extends Component {
     videoData: {},
     seriesOptions: [],
     loadingVideo: false,
-    searchingSeries: false
+    searchingSeries: false,
+    loading: false
   }
   
   componentWillMount () {
@@ -121,7 +122,9 @@ export default class EditVideo extends Component {
       toast.error('Please choose thumbnails for video')
       return
     }
+    this.setState({loading: true})    
     updateVideo(videoData).then(data => {
+      this.setState({loading: false})
       if(!(data.errors && data.errors.length)) {
         toast.success('Update video successfully!')
         this.props.history.push('/video/list')
@@ -159,7 +162,7 @@ export default class EditVideo extends Component {
   }
 
   render() {
-    const {videoData, seriesOptions, loadingVideo, searchingSeries} = this.state
+    const {videoData, seriesOptions, loadingVideo, searchingSeries, loading} = this.state
 
     if (loadingVideo) return <div className='div__loading-full'><Dimmer inverted active><Loader /></Dimmer></div>
 
@@ -317,7 +320,7 @@ export default class EditVideo extends Component {
             </Segment>
           </Segment.Group>
           <div style={{textAlign: 'right'}}>
-            <Button primary content='Update' onClick={this._handleVideoCreate}/>
+            <Button primary content='Update' onClick={this._handleVideoCreate} loading={loading}/>
           </div>
         </div>
         }
