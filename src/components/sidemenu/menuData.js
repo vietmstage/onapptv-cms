@@ -95,18 +95,18 @@ const menuData = [
       {
         title: 'News list',
         to: '/news/list',
-        icon: 'users'
+        icon: 'newspaper'
       },
       {
         title: 'Add news',
         to: '/news/add',
         icon: 'plus'
-      },
-      {
-        title: 'Archived news',
-        to: '/news/trash',
-        icon: 'trash'
       }
+      // {
+      //   title: 'Archived news',
+      //   to: '/news/archived',
+      //   icon: 'trash'
+      // }
     ]
   },
   {
@@ -121,12 +121,12 @@ const menuData = [
         title: 'Add new Ads',
         to: '/ads/add',
         icon: 'plus'
-      },
-      {
-        title: 'Archived Ads',
-        to: '/ads/trash',
-        icon: 'trash'
       }
+      // {
+      //   title: 'Archived Ads',
+      //   to: '/ads/archived',
+      //   icon: 'trash'
+      // }
     ]
   },
   {
